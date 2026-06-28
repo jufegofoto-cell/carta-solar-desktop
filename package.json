@@ -1,0 +1,37 @@
+{
+  "name": "carta-solar",
+  "version": "1.0.0",
+  "description": "Carta Solar bioclimatica con confort adaptativo ASHRAE 55-2010 (escritorio)",
+  "author": "Universidad de San Buenaventura - Pasto",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win --x64"
+  },
+  "devDependencies": {
+    "electron": "^42.4.1",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "co.edu.usb.cartasolar",
+    "productName": "CartaSolar",
+    "copyright": "Universidad de San Buenaventura - Pasto",
+    "directories": { "output": "dist" },
+    "files": [ "src/**/*", "carta_solar.html", "package.json" ],
+    "compression": "maximum",
+    "win": {
+      "target": [
+        { "target": "portable", "arch": ["x64"] },
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "portable": { "artifactName": "CartaSolar-${version}-portable.exe" },
+    "nsis": {
+      "oneClick": false, "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "CartaSolar-${version}-setup.exe", "shortcutName": "Carta Solar"
+    }
+  }
+}
