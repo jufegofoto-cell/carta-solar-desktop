@@ -1,9 +1,18 @@
 name: Build Windows
 
+# Compila Carta Solar para Windows x64 y publica el .exe en un RELEASE.
+# Publicar en Release (en vez de "artifact") evita el límite de
+# almacenamiento de artefactos del plan gratuito y no se acumula:
+#  - Ejecución manual (Run workflow): actualiza el release "latest".
+#  - Empujar una etiqueta vX.Y.Z: crea un release con esa versión.
+
 on:
   push:
     tags: [ 'v*' ]
   workflow_dispatch:
+
+permissions:
+  contents: write          # necesario para crear/actualizar el Release
 
 jobs:
   build-windows:
@@ -11,25 +20,24 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
+
       - name: Install dependencies
         run: npm install
+
       - name: Build portable + installer (x64)
         run: npm run dist
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: CartaSolar-windows-x64
-          path: dist/*.exe
-          if-no-files-found: error
-      - name: Publish GitHub Release (solo en etiquetas v*)
-        if: startsWith(github.ref, 'refs/tags/')
+
+      - name: Publish to Release (no usa la cuota de artefactos)
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || 'latest' }}
+          name: ${{ github.ref_type == 'tag' && github.ref_name || 'Última compilación (latest)' }}
           files: dist/*.exe
-          generate_release_notes: true
+          fail_on_unmatched_files: true
