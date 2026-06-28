@@ -305,9 +305,8 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
         </div>
         Analema Dic→Jun (punteado)
       </div>
-      <div class="lr"><div class="ls" style="background:#b03018;height:2.5px;"></div>Mediodía solar (12h)</div>
-      <div class="lr"><div class="ls" style="background:#c06038;height:1.5px;"></div>Horas pares</div>
-      <div class="lr"><div class="ls" style="background:#d09070;height:1px;border-top:1px dashed #c08060;"></div>Horas impares (dashed)</div>
+      <div class="lr"><div class="ls" style="background:#7030a0;height:3px;"></div>Mediodía solar (12h) — trazo grueso</div>
+      <div class="lr"><div class="ls" style="background:#7030a0;height:1.5px;"></div>Demás horas (06h–18h)</div>
     </div>
     <div class="legend-card">
       <h3>Cuadrícula</h3>
@@ -754,16 +753,13 @@ function _render(){
   // durante todo el año. El bug anterior pasaba HA=(h-12)*15 en lugar
   // de la hora h — ahora se pasa la hora correctamente.
   if(showAnalema){
-    // Paleta por hora: espectro calido-frio segun posicion solar
-    const ACOLS={
-      6:'#1a6090', 7:'#2a50a8', 8:'#4030b8', 9:'#6020b0',
-      10:'#8018a0',11:'#9a1888',12:'#7030a0',
-      13:'#9a1888',14:'#a02868',15:'#a83848',
-      16:'#a04030',17:'#904828',18:'#7a5020'
-    };
+    // Color único de analema = convención (morado #7030a0). El mediodía (12h)
+    // se traza más grueso. Los dos tramos del año van continuo (Jun→Dic) y
+    // punteado (Dic→Jun), tal como indican las convenciones.
+    const ANALEMA_COL='#7030a0';
     for(let h=6;h<=18;h++){
       const isNoon=(h===12);
-      const col=ACOLS[h]||'#7030a0';
+      const col=ANALEMA_COL;
       // BUG FIX: pasar h (hora civil), NO HA=(h-12)*15
       drawAnalema(h,lat,R,HR,cx,cy,
         col,
@@ -796,7 +792,7 @@ function _render(){
       if(!pos.visible||pos.alt<2)continue;
       const p=project(pos.alt,pos.az,R,HR,cx,cy,S);
       const hStr=h<10?`0${h}h`:`${h}h`;
-      const col=ACOLS[h]||'#7030a0';
+      const col='#7030a0';
       txt(hStr,p.x,p.y-S*0.011,S*0.011,col,
         {align:'center',bg:'rgba(253,250,244,0.82)',mono:true,bold:true});
     }
@@ -894,7 +890,7 @@ function _render(){
   txt('H=(h_solar-12)x15deg | Declinacion: Cooper (1969)',bx,by+S*0.015,S*0.009,'#7090a0',{align:'right',mono:true});
   if(proyeccion!=='cartesian'){
     txt('CENIT',cx+S*0.012,cy-S*0.012,S*0.011,'#1a2f3e',{mono:true});
-    txt('HORIZONTE (0\u00b0)',cx,cy+HR+S*0.068,S*0.012,'#3a4a5a',{align:'center',mono:true});
+    txt('HORIZONTE (0\u00b0)',cx-S*0.22,cy+HR+S*0.068,S*0.012,'#3a4a5a',{align:'center',mono:true});
   }
 
   // ── Actualizar masthead ──────────────────────────────────────────────
