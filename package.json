@@ -1,17 +1,17 @@
 {
   "name": "carta-solar",
-  "version": "1.0.0",
-  "description": "Carta Solar bioclimatica con confort adaptativo ASHRAE 55-2010 (escritorio)",
+  "version": "2.0.0",
+  "description": "Carta Solar bioclimatica: proyecciones estereografica, polar y cartesiana, superposicion climatica EPW en hora solar verdadera, confort adaptativo ASHRAE 55-2010 (banda 90%), mascaras de sombreado VSA/HSA y exportacion DXF R12 (escritorio)",
   "author": "Universidad de San Buenaventura - Pasto",
   "license": "UNLICENSED",
   "private": true,
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win --x64"
+    "dist": "electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
-    "electron": "^42.4.1",
+    "electron": "^44.0.0",
     "electron-builder": "^26.15.3"
   },
   "build": {
