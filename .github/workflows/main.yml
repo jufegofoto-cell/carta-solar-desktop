@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 30
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # ────────────────────────────────────────────────────────────────
       # Verificacion del HTML DEL REPOSITORIO.
@@ -86,11 +86,16 @@ jobs:
           "- SHA-256 HTML: ``$sha``" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # Node 20 llego a fin de vida el 30-abr-2026. 24 es Active LTS.
           node-version: '24'
-          cache: 'npm'
+          # setup-node ABORTA si se le pide cache y no encuentra lockfile
+          # ("Dependencies lock file is not found"), y lo hace antes de que
+          # corra cualquier paso posterior. La expresion deja el valor vacio
+          # cuando no hay package-lock.json, que desactiva la cache en vez de
+          # romper el build.
+          cache: ${{ hashFiles('package-lock.json') != '' && 'npm' || '' }}
 
       # npm ci exige package-lock.json. Si aun no esta versionado se usa npm
       # install para no romper el build, pero se avisa: sin lockfile cada
@@ -128,7 +133,7 @@ jobs:
           }
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: CartaSolar-windows-x64
           path: dist/*.exe
@@ -137,7 +142,7 @@ jobs:
 
       - name: Publish GitHub Release (solo en etiquetas v*)
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/*.exe
           generate_release_notes: true
