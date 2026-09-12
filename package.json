@@ -18,10 +18,11 @@
     "appId": "co.edu.usb.cartasolar",
     "productName": "CartaSolar",
     "copyright": "Universidad de San Buenaventura - Pasto",
-    "directories": { "output": "dist" },
-    "files": [ "src/**/*", "carta_solar.html", "package.json" ],
+    "files": [ "src/**/*", "carta_solar.html", "package.json", "build/icon.*" ],
+    "directories": { "output": "dist", "buildResources": "build" },
     "compression": "maximum",
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         { "target": "portable", "arch": ["x64"] },
         { "target": "nsis", "arch": ["x64"] }
@@ -31,7 +32,9 @@
     "nsis": {
       "oneClick": false, "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "artifactName": "CartaSolar-${version}-setup.exe", "shortcutName": "Carta Solar"
+      "artifactName": "CartaSolar-${version}-setup.exe", "shortcutName": "Carta Solar",
+      "installerIcon": "build/icon.ico", "uninstallerIcon": "build/icon.ico",
+      "installerHeaderIcon": "build/icon.ico", "createDesktopShortcut": true
     }
   }
 }
