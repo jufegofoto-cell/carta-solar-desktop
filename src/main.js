@@ -10,6 +10,17 @@ const path = require('path');
 const fs = require('fs');
 
 const APP_HTML = path.join(__dirname, '..', 'carta_solar.html');
+
+// En Windows el .exe ya lleva el icono incrustado por electron-builder, pero
+// en desarrollo (npm start) y en Linux hace falta pasarlo a la ventana. Se
+// devuelve undefined si no esta, para no romper el arranque por un icono.
+function iconoApp() {
+  for (const p of [path.join(__dirname, '..', 'build', 'icon.ico'),
+                   path.join(__dirname, '..', 'build', 'icon.png')]) {
+    if (fs.existsSync(p)) return p;
+  }
+  return undefined;
+}
 const APP_VERSION = app.getVersion();
 
 const gotLock = app.requestSingleInstanceLock();
@@ -39,6 +50,7 @@ function createMainWindow() {
     width: 1440, height: 920, minWidth: 1024, minHeight: 680,
     backgroundColor: '#f4f1ec',
     title: 'Carta Solar ' + APP_VERSION,
+    icon: iconoApp(),
     show: false,
     webPreferences: {
       contextIsolation: true, nodeIntegration: false, sandbox: true,
@@ -127,6 +139,9 @@ function buildMenu() {
 }
 
 app.whenReady().then(() => {
+  // Sin AppUserModelID, Windows agrupa la ventana bajo el icono generico de
+  // Electron en la barra de tareas aunque el ejecutable lleve el suyo.
+  if (process.platform === 'win32') app.setAppUserModelId('co.edu.usb.cartasolar');
   buildMenu(); createMainWindow();
   app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createMainWindow(); });
 });
