@@ -94,9 +94,29 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
 .status-bar{display:flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--dim);padding:5px 3px 0;}
 .status-dot{width:7px;height:7px;border-radius:50%;background:#3a8a50;flex-shrink:0;}
 .status-dot.rendering{background:var(--gold);}
+.status-dot.error{background:#b83018;}
+
+/* Deslizadores de la mascara — el campo numerico queda al lado y ambos
+   controlan el mismo valor */
+.slider-row{display:flex;align-items:center;gap:8px;}
+.slider-row input[type=number]{width:60px;flex:0 0 auto;text-align:center;}
+.slider-row .sl{flex:1 1 auto;min-width:40px;}
+.dev-fields{transition:opacity .15s;}
+.dev-fields.off{opacity:.38;pointer-events:none;}
+input[type=range].sl{-webkit-appearance:none;appearance:none;width:100%;height:16px;background:transparent;margin:0;padding:0;cursor:pointer;}
+input[type=range].sl::-webkit-slider-runnable-track{height:4px;border-radius:3px;background:#dbe6ee;}
+input[type=range].sl::-moz-range-track{height:4px;border-radius:3px;background:#dbe6ee;}
+input[type=range].sl::-moz-range-progress{height:4px;border-radius:3px;background:var(--blue);}
+input[type=range].sl::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:13px;height:13px;border-radius:50%;background:var(--blue);border:2px solid var(--paper);box-shadow:0 1px 3px rgba(26,31,38,.35);margin-top:-4.5px;transition:transform .12s,box-shadow .12s;}
+input[type=range].sl::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--blue);border:2px solid var(--paper);box-shadow:0 1px 3px rgba(26,31,38,.35);}
+input[type=range].sl:hover::-webkit-slider-thumb{transform:scale(1.15);}
+input[type=range].sl:hover::-moz-range-thumb{transform:scale(1.15);}
+input[type=range].sl:focus-visible{outline:none;}
+input[type=range].sl:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px rgba(26,74,122,.20);}
+input[type=range].sl:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(26,74,122,.20);}
 
 @media(max-width:1100px){.app-body{grid-template-columns:1fr;}.sidebar-right{position:static;}}
-@media(max-width:600px){.legend-grid{grid-template-columns:1fr;}.masthead{padding:11px 16px;}}
+@media(max-width:600px){.masthead{padding:11px 16px;}}
 </style>
 </head>
 <body>
@@ -120,21 +140,21 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
     <div class="panel-head"><span class="phi">⊙</span> Ubicación manual</div>
     <div class="panel-body">
       <div class="field">
-        <label>Nombre del lugar</label>
+        <label for="inCity">Nombre del lugar</label>
         <input type="text" id="inCity" placeholder="Ej. Bogotá, Colombia">
       </div>
       <div class="field-row">
         <div class="field">
-          <label>Latitud (° N+/S−)</label>
+          <label for="inLat">Latitud (° N+/S−)</label>
           <input type="number" id="inLat" placeholder="0.00" step="0.01" min="-90" max="90">
         </div>
         <div class="field">
-          <label>Longitud (°E+/O−)</label>
+          <label for="inLon">Longitud (°E+/O−)</label>
           <input type="number" id="inLon" placeholder="0.00" step="0.01">
         </div>
       </div>
       <div class="field">
-        <label>Tamaño del gráfico</label>
+        <label for="inSize">Tamaño del gráfico</label>
         <select id="inSize">
           <option value="900">900 × 900 — Estándar</option>
           <option value="1080" selected>1080 × 1080 — HD</option>
@@ -210,12 +230,12 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
   </div>
 
   <!-- Posición solar puntual -->
-  <div class="panel" style="order:6">
+  <div class="panel" style="order:7">
     <div class="panel-head"><span class="phi">◉</span> Posición solar — fecha/hora</div>
     <div class="panel-body">
       <div class="field-row">
-        <div class="field"><label>Fecha</label><input type="date" id="inDate"></div>
-        <div class="field"><label>Hora solar</label><input type="time" id="inTime" value="12:00"></div>
+        <div class="field"><label for="inDate">Fecha</label><input type="date" id="inDate"></div>
+        <div class="field"><label for="inTime">Hora solar</label><input type="time" id="inTime" value="12:00"></div>
       </div>
       <button class="btn btn-sun" onclick="calcularSol()">◉ Calcular y marcar</button>
       <div class="sun-result" id="sunResult">
@@ -229,7 +249,7 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
   </div>
 
   <!-- Generar / Exportar -->
-  <div class="panel" style="order:7">
+  <div class="panel" style="order:8">
     <div class="panel-head"><span class="phi">⤓</span> Generar · Exportar</div>
     <div class="panel-body">
       <button class="btn btn-primary" onclick="render()">⊙ Generar carta solar</button>
@@ -255,14 +275,104 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
       <div style="font-size:0.66rem;color:var(--ink-soft,#5a6a76);line-height:1.4;margin-bottom:7px;">
         Carga un archivo climático <b>.epw</b>. Se generan <b>dos cartas semestrales</b>
         con la trayectoria solar coloreada según el modelo de confort adaptativo
-        ASHRAE 55-2010, usando <b>promedios ponderados</b> (media recortada) para
-        no sesgar con picos históricos.
+        ASHRAE 55-2010. Se usa <b>media recortada</b> (no ponderada) para atenuar
+        los días extremos del año típico. Las horas del EPW se convierten a
+        <b>hora solar verdadera</b> con la longitud y la zona horaria del archivo.
       </div>
       <input type="file" id="inEPW" accept=".epw,.csv,.txt" style="display:none">
       <button class="btn btn-secondary" onclick="document.getElementById('inEPW').click()">📂 Cargar archivo EPW</button>
       <div class="status-bar" style="margin-top:7px;">
         <div class="status-dot" id="epwDot"></div>
         <span id="epwText">Sin archivo EPW</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Máscara de sombreado -->
+  <div class="panel" style="order:6">
+    <div class="panel-head"><span class="phi">◐</span> Máscara de sombreado</div>
+    <div class="panel-body">
+      <div class="sw-row">
+        <div class="sw-label">Activar máscara<small>Proyecta el sombreado sobre la carta</small></div>
+        <label class="sw"><input type="checkbox" id="swMask"><span class="sw-slider"></span></label>
+      </div>
+      <div id="maskBody" style="display:none;flex-direction:column;gap:9px;">
+        <div class="field">
+          <label for="inMaskAz">Acimut de la normal del muro (°)</label>
+          <div class="slider-row">
+            <input type="range" class="sl" id="rgMaskAz" min="0" max="359" step="1" value="180"
+              aria-label="Acimut de la normal del muro">
+            <input type="number" id="inMaskAz" value="180" min="0" max="359" step="1">
+          </div>
+        </div>
+        <div class="toggle-row">
+          <button class="toggle-btn" id="mBtnN" onclick="setMuroAz(0)">N</button>
+          <button class="toggle-btn" id="mBtnE" onclick="setMuroAz(90)">E</button>
+          <button class="toggle-btn active" id="mBtnS" onclick="setMuroAz(180)">S</button>
+          <button class="toggle-btn" id="mBtnO" onclick="setMuroAz(270)">O</button>
+        </div>
+        <div class="divider"></div>
+        <div class="sw-row">
+          <div class="sw-label">VSA<small>Ángulo de sombra vertical — volado horizontal</small></div>
+          <label class="sw"><input type="checkbox" id="swVol" checked><span class="sw-slider"></span></label>
+        </div>
+        <div class="field dev-fields" id="fldVol">
+          <label for="inVolG">γ VSA (°)</label>
+          <div class="slider-row">
+            <input type="range" class="sl" id="rgVolG" min="1" max="89" step="1" value="45"
+              aria-label="Ángulo VSA del volado">
+            <input type="number" id="inVolG" value="45" min="1" max="89" step="1">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="sw-row">
+          <div class="sw-label">Aleta izquierda<small>HSA — ángulo de sombra horizontal</small></div>
+          <label class="sw"><input type="checkbox" id="swAletaI"><span class="sw-slider"></span></label>
+        </div>
+        <div class="field dev-fields off" id="fldAletaI">
+          <label for="inAletaI">HSA izquierda (°)</label>
+          <div class="slider-row">
+            <input type="range" class="sl" id="rgAletaI" min="1" max="89" step="1" value="45"
+              aria-label="Ángulo HSA de la aleta izquierda">
+            <input type="number" id="inAletaI" value="45" min="1" max="89" step="1">
+          </div>
+        </div>
+        <div class="sw-row">
+          <div class="sw-label">Aleta derecha<small>HSA — ángulo de sombra horizontal</small></div>
+          <label class="sw"><input type="checkbox" id="swAletaD"><span class="sw-slider"></span></label>
+        </div>
+        <div class="field dev-fields off" id="fldAletaD">
+          <label for="inAletaD">HSA derecha (°)</label>
+          <div class="slider-row">
+            <input type="range" class="sl" id="rgAletaD" min="1" max="89" step="1" value="45"
+              aria-label="Ángulo HSA de la aleta derecha">
+            <input type="number" id="inAletaD" value="45" min="1" max="89" step="1">
+          </div>
+        </div>
+        <div class="field">
+          <label for="inDmax">Fondo máx. del dispositivo (D/H)</label>
+          <div class="slider-row">
+            <input type="range" class="sl" id="rgDmax" min="0.1" max="6" step="0.1" value="1"
+              aria-label="Fondo máximo del dispositivo">
+            <input type="number" id="inDmax" value="1.0" min="0.1" max="6" step="0.1">
+          </div>
+        </div>
+        <button class="btn btn-sun" id="btnOptim" onclick="optimizarMascara()" disabled
+          title="Requiere un EPW cargado">◐ Optimizar ángulos con el EPW</button>
+        <div class="sun-result" id="maskResult">
+          <div class="sun-val"><span class="sun-val-label">Horas de calor bloq.</span><span><span class="sun-val-num" id="mkHot">—</span><span class="sun-val-unit">%</span></span></div>
+          <div class="sun-val"><span class="sun-val-label">Horas de confort bloq.</span><span><span class="sun-val-num" id="mkCom">—</span><span class="sun-val-unit">%</span></span></div>
+          <div class="sun-val"><span class="sun-val-label">Horas de frío bloq.</span><span><span class="sun-val-num" id="mkCold">—</span><span class="sun-val-unit">%</span></span></div>
+          <div class="sun-val" style="border-top:1px solid #2a4050;padding-top:4px;margin-top:1px;">
+            <span class="sun-val-label">Fondo volado</span><span><span class="sun-val-num" id="mkDH">—</span><span class="sun-val-unit">D/H</span></span></div>
+          <div class="sun-val"><span class="sun-val-label">Vuelo aletas izq/der</span><span><span class="sun-val-num" id="mkPW" style="font-size:0.78rem;">—</span><span class="sun-val-unit">P/W</span></span></div>
+        </div>
+        <div style="font-size:0.60rem;color:var(--dim);line-height:1.5;font-family:'JetBrains Mono',monospace;">
+          Máscara para el <b>punto central</b> del vano, con volado y aletas de
+          <b>extensión infinita</b>. Los bordes reales del vano ven más cielo.
+          Porcentajes calculados <b>solo sobre las horas que ve la fachada</b>:
+          miden lo que hacen los dispositivos, no el muro.
+        </div>
       </div>
     </div>
   </div>
@@ -316,6 +426,13 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
       <div class="lr"><div class="ls" style="background:#1a1f26;height:2.5px;"></div>Horizonte</div>
     </div>
     <div class="legend-card">
+      <h3>Máscara de sombreado</h3>
+      <div class="lr"><div class="ls" style="background:#18222e;height:9px;opacity:.55;"></div>Bóveda oculta</div>
+      <div class="lr"><div class="ls" style="background:#0d6a86;height:3px;"></div>Corte VSA del volado (γ)</div>
+      <div class="lr"><div class="ls" style="background:#0d6a86;height:2px;opacity:.7;"></div>Borde de aletas</div>
+      <div class="lr"><div class="ls" style="background:#12202c;height:3px;"></div>Plano de fachada + normal</div>
+    </div>
+    <div class="legend-card">
       <h3>Especiales</h3>
       <div class="lr"><div class="ld" style="background:#c04828;"></div>Solsticios (horizonte)</div>
       <div class="lr"><div class="ld" style="background:#1a4a7a;"></div>Equinoccios (horizonte)</div>
@@ -347,6 +464,9 @@ const asin   = v=>Math.asin(Math.min(1,Math.max(-1,v)))/RAD;
 const atan2d = (y,x)=>Math.atan2(y,x)/RAD;
 
 const MESES  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+// Escape de HTML: 'city' puede venir del archivo EPW (fuente no confiable)
+const esc = s => String(s).replace(/[&<>"']/g,
+  c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const DOY21  = [21,52,80,111,141,172,203,234,265,295,325,355];
 const COL_MES= ['#3a5f9a','#4a70aa','#2a8870','#3ab858','#80a020','#c88010',
                  '#c86010','#c84030','#a04060','#6040a0','#3060b0','#2050a0'];
@@ -364,6 +484,7 @@ let mesesSel   = new Array(12).fill(true);
 let sunMarker  = null;
 let VEC        = {lines:[],circles:[],texts:[]};
 let canvas, ctx;
+let yaGenerado = false;   // evita redibujar antes de la primera generacion
 
 // ── Astronomía ────────────────────────────────────────────────────────
 function declinacion(doy){ return 23.45*Math.sin((360/365)*(doy-81)*RAD); }
@@ -417,14 +538,26 @@ function project(alt,az,R,HR,cx,cy,S){
   return {x:ox+(az/360)*W, y:oy+H-(alt/90)*H};
 }
 
+// ── Continuidad de acimut ─────────────────────────────────────────────
+// En proyeccion cartesiana el eje X mapea acimut 0..360 linealmente, asi que
+// cuando el sol cruza el norte (frecuente en el tropico: en Cali ocurre de
+// abril a agosto) dos muestras consecutivas saltan de ~359 a ~1 y el trazo
+// atraviesa media carta en horizontal. Aqui se corta el trazo en ese cruce.
+// En estereografica y polar el acimut es angular y el salto es inocuo.
+function conecta(azA,azB){
+  if(proyeccion!=='cartesian') return true;
+  if(azA===null||azB===null||azA===undefined||azB===undefined) return true;
+  return Math.abs(azB-azA)<=180;
+}
+
 // ── Primitivas ────────────────────────────────────────────────────────
-function ln(x1,y1,x2,y2,col,lw,dash){
+function ln(x1,y1,x2,y2,col,lw,dash,layer){
   lw=lw||1;dash=dash||[];
   ctx.save();ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
   ctx.strokeStyle=col;ctx.lineWidth=lw;
   if(dash.length)ctx.setLineDash(dash);
   ctx.stroke();ctx.restore();
-  VEC.lines.push({x1,y1,x2,y2,col,lw});
+  VEC.lines.push({x1,y1,x2,y2,col,lw,dash:dash.length?1:0,layer});
 }
 
 function circ(x,y,r,col,lw,altDeg){
@@ -435,10 +568,14 @@ function circ(x,y,r,col,lw,altDeg){
   VEC.circles.push({cx:x,cy:y,r,col,lw:lw||1,altDeg:altDeg});
 }
 
-function dot(x,y,r,fill,stroke,slw){
+function dot(x,y,r,fill,stroke,slw,layer){
   ctx.beginPath();ctx.arc(x,y,r,0,2*Math.PI);
   ctx.fillStyle=fill;ctx.fill();
   if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=slw||1.5;ctx.stroke();}
+  // Los puntos tambien deben llegar al DXF (antes solo se dibujaban en canvas
+  // y la capa SOL_MANUAL salia siempre vacia).
+  VEC.circles.push({cx:x,cy:y,r,col:fill,lw:0.6,altDeg:undefined,
+    layer:layer||'VARIOS',isDot:true});
 }
 
 function txt(t,x,y,size,col,opts){
@@ -457,27 +594,28 @@ function txt(t,x,y,size,col,opts){
     ctx.fillStyle=col;
   }
   ctx.fillText(t,x,y);ctx.restore();
-  VEC.texts.push({t,x,y,size,col});
+  VEC.texts.push({t,x,y,size,col,align:opts.align||'left'});
 }
 
 // ── Dibujar trayectoria solar (un DOY) ────────────────────────────────
 // layer: nombre de capa DXF opcional (p.ej. 'ENERO', 'FEBRERO'…)
 function drawTray(doy,col,lw,dash,lat,R,HR,cx,cy,S,layer){
-  const decl=declinacion(doy);let prev=null;
+  const decl=declinacion(doy);let prev=null,prevAz=null;
   layer=layer||'TRAYECT';
   for(let sh=3.5;sh<=20.5;sh+=0.04){
     const HA=(sh-12)*15,pos=posSolar(lat,decl,HA);
     if(pos.visible&&pos.alt>0.15){
       const p=project(pos.alt,pos.az,R,HR,cx,cy,S);
-      if(prev){
+      if(prev&&conecta(prevAz,pos.az)){
         ctx.save();ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);
         ctx.strokeStyle=col;ctx.lineWidth=lw;
         if(dash&&dash.length)ctx.setLineDash(dash);
         ctx.stroke();ctx.restore();
-        VEC.lines.push({x1:prev.x,y1:prev.y,x2:p.x,y2:p.y,col,lw,layer});
+        VEC.lines.push({x1:prev.x,y1:prev.y,x2:p.x,y2:p.y,col,lw,layer,
+          dash:(dash&&dash.length)?1:0});
       }
-      prev=p;
-    }else{prev=null;}
+      prev=p;prevAz=pos.az;
+    }else{prev=null;prevAz=null;}
   }
 }
 
@@ -514,7 +652,7 @@ function drawMonthLabels(idxList, lat, R, HR, cx, cy, S){
 // HA_real = (hora_reloj + EqT/60 - 12) * 15
 // Con EqT en minutos (Spencer 1971).
 function eqTiempoMin(doy){
-  const B=(360/365)*(doy-81)*RAD;
+  const B=(360/364)*(doy-81)*RAD;   // Spencer/Duffie-Beckman usan 364, no 365
   return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B); // minutos
 }
 function drawAnalema(hReloj,lat,R,HR,cx,cy,col,lw,S,activeMonths){
@@ -538,7 +676,7 @@ function drawAnalema(hReloj,lat,R,HR,cx,cy,col,lw,S,activeMonths){
     const HA=(horaSolar-12)*15;
     const pos=posSolar(lat,declinacion(doy),HA);
     if(pos.visible&&pos.alt>0){
-      pts.push({p:project(pos.alt,pos.az,R,HR,cx,cy,S), doy});
+      pts.push({p:project(pos.alt,pos.az,R,HR,cx,cy,S), doy, az:pos.az});
     } else {
       pts.push(null);
     }
@@ -547,7 +685,7 @@ function drawAnalema(hReloj,lat,R,HR,cx,cy,col,lw,S,activeMonths){
   // Dibujar segmento a segmento aplicando el estilo segun el tramo
   let prev=null;
   for(const item of pts){
-    if(item&&prev){
+    if(item&&prev&&conecta(prev.az,item.az)){
       // El estilo del segmento lo determina el DOY del punto ANTERIOR
       const dash=isDicJun(prev.doy)?DASH_DIC_JUN:DASH_JUN_DIC;
       ctx.save();ctx.beginPath();ctx.moveTo(prev.p.x,prev.p.y);ctx.lineTo(item.p.x,item.p.y);
@@ -555,7 +693,7 @@ function drawAnalema(hReloj,lat,R,HR,cx,cy,col,lw,S,activeMonths){
       if(dash.length)ctx.setLineDash(dash);
       ctx.stroke();ctx.restore();
       VEC.lines.push({x1:prev.p.x,y1:prev.p.y,x2:item.p.x,y2:item.p.y,col,lw,
-        layer:'ANALEMAS'});
+        layer:'ANALEMAS', dash:dash.length?1:0});
     }
     prev=item||null;
   }
@@ -563,26 +701,32 @@ function drawAnalema(hReloj,lat,R,HR,cx,cy,col,lw,S,activeMonths){
 
 // ── Línea horaria (HA fijo, todos los DOY) ────────────────────────────
 function drawHoraria(HA,lat,R,HR,cx,cy,h,col,lw,dash,S,activeMonths){
-  let prev=null;
+  let prev=null,prevAz=null;
   for(let doy=1;doy<=365;doy+=1.5){
-    const mi=Math.min(11,Math.floor((doy/365)*12));
-    if(periodo==='meses'&&!activeMonths[mi]){prev=null;continue;}
+    const mi=Math.min(11,Math.floor(((doy-1)/365)*12));
+    if(periodo==='meses'&&!activeMonths[mi]){prev=null;prevAz=null;continue;}
     const pos=posSolar(lat,declinacion(doy),HA);
     if(pos.visible&&pos.alt>0.2){
       const p=project(pos.alt,pos.az,R,HR,cx,cy,S);
-      if(prev){
+      if(prev&&conecta(prevAz,pos.az)){
         ctx.save();ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);
         ctx.strokeStyle=col;ctx.lineWidth=lw;
         if(dash&&dash.length)ctx.setLineDash(dash);
         ctx.stroke();ctx.restore();
-        VEC.lines.push({x1:prev.x,y1:prev.y,x2:p.x,y2:p.y,col,lw});
+        VEC.lines.push({x1:prev.x,y1:prev.y,x2:p.x,y2:p.y,col,lw,layer:'HORARIAS',
+          dash:(dash&&dash.length)?1:0});
       }
-      prev=p;
-    }else{prev=null;}
+      prev=p;prevAz=pos.az;
+    }else{prev=null;prevAz=null;}
   }
-  // Etiqueta en equinoccio
-  if(periodo==='meses'&&!activeMonths[2])return;
-  const posEq=posSolar(lat,declinacion(80),HA);
+  // Etiqueta anclada al primer mes ACTIVO (antes estaba fija al equinoccio de
+  // marzo: si marzo no estaba seleccionado, ninguna horaria quedaba rotulada).
+  let refMi=2;
+  if(periodo==='meses'){
+    refMi=activeMonths.findIndex(v=>v);
+    if(refMi<0)return;
+  }
+  const posEq=posSolar(lat,declinacion(DOY21[refMi]),HA);
   if(posEq.visible&&posEq.alt>2){
     const p=project(posEq.alt,posEq.az,R,HR,cx,cy,S);
     txt((h<10?`0${h}h`:`${h}h`),p.x,p.y-S*0.012,S*0.012,col,
@@ -609,19 +753,19 @@ function drawGridPolar(lat,R,HR,cx,cy,S){
   for(let az=0;az<360;az+=15){
     const azR=az*RAD,isC=az%90===0,isO=az%45===0;
     ln(cx,cy,cx+HR*Math.sin(azR),cy-HR*Math.cos(azR),
-      isC?'#90a8c0':isO?'#b0c4d4':'#d4e0e8',isC?0.9:0.5);
+      isC?'#90a8c0':isO?'#b0c4d4':'#d4e0e8',isC?0.9:0.5,null,'ACIMUTS');
   }
   // Etiquetas altitud
   for(let alt=0;alt<=90;alt+=10){
     let rp;
     if(proyeccion==='stereo') rp=alt===0?HR:2*R*tan((90-alt)/2);
     else                       rp=alt===0?HR:HR*(90-alt)/90;
-    const ang=(-90+18)*RAD;
-    txt(`${alt}\u00b0`,cx+(rp+6)*Math.cos(ang),cy+(rp+6)*Math.sin(ang)+4,
+    const ang=(-90+18)*RAD, off=S*0.0056;
+    txt(`${alt}\u00b0`,cx+(rp+off)*Math.cos(ang),cy+(rp+off)*Math.sin(ang)+S*0.0037,
       S*0.011,'#3a5870',{align:'center',mono:true});
   }
   txt('0\u00b0',cx,cy+HR+S*0.022,S*0.011,'#3a5870',{align:'center',mono:true});
-  txt('90\u00b0',cx+7,cy-8,S*0.011,'#3a5870',{align:'left',mono:true});
+  txt('90\u00b0',cx+S*0.0065,cy-S*0.0074,S*0.011,'#3a5870',{align:'left',mono:true});
   // Ticks y etiquetas acimut
   const cardNames={0:'N',90:'E',180:'S',270:'O'};
   for(let az=0;az<360;az+=5){
@@ -631,7 +775,7 @@ function drawGridPolar(lat,R,HR,cx,cy,S){
     if(az%30===0){tick=S*0.018;lw=1.4;col='#30485a';}
     if(az%90===0){tick=S*0.028;lw=2.0;col='#1a2f3e';}
     ln(cx+(HR-tick)*Math.sin(azR),cy-(HR-tick)*Math.cos(azR),
-       cx+(HR+tick*0.35)*Math.sin(azR),cy-(HR+tick*0.35)*Math.cos(azR),col,lw);
+       cx+(HR+tick*0.35)*Math.sin(azR),cy-(HR+tick*0.35)*Math.cos(azR),col,lw,null,'ACIMUTS');
     if(az%10===0){
       const tr=HR+S*0.03;
       txt(`${az}\u00b0`,cx+tr*Math.sin(azR),cy-tr*Math.cos(azR),S*0.010,'#405868',
@@ -648,14 +792,16 @@ function drawGridPolar(lat,R,HR,cx,cy,S){
 // ── Cuadrícula cartesiana ─────────────────────────────────────────────
 function drawGridCartesian(R,cx,cy,S){
   const ox=cx-R,oy=cy-R,W=R*2,H=R*2;
-  // Marco
-  ctx.strokeStyle='#1a2f3e';ctx.lineWidth=2;ctx.strokeRect(ox,oy,W,H);
-  VEC.circles.push({cx:ox+W/2,cy:oy+H/2,r:0,col:'#1a2f3e',lw:2}); // placeholder
+  // Marco — via ln() para que tambien llegue al DXF
+  ln(ox,oy,ox+W,oy,'#1a2f3e',2,null,'HORIZONTE');
+  ln(ox+W,oy,ox+W,oy+H,'#1a2f3e',2,null,'HORIZONTE');
+  ln(ox+W,oy+H,ox,oy+H,'#1a2f3e',2,null,'HORIZONTE');
+  ln(ox,oy+H,ox,oy,'#1a2f3e',2,null,'HORIZONTE');
   // Líneas altitud
   for(let alt=10;alt<90;alt+=10){
     const y=oy+H-(alt/90)*H;
     const col=alt%30===0?'#6e8ca2':alt%10===0?'#94aec0':'#c0d0dc';
-    ln(ox,y,ox+W,y,col,alt%30===0?1.0:0.6);
+    ln(ox,y,ox+W,y,col,alt%30===0?1.0:0.6,null,'ALTITUDES');
     txt(`${alt}\u00b0`,ox-S*0.008,y,S*0.011,'#3a5870',{align:'right',baseline:'middle',mono:true});
   }
   txt('Altitud solar (\u00b0)',ox-S*0.048,cy,S*0.012,'#3a5870',{align:'center',mono:true});
@@ -663,7 +809,7 @@ function drawGridCartesian(R,cx,cy,S){
   for(let az=0;az<=360;az+=15){
     const x=ox+(az/360)*W;
     const col=az%90===0?'#90a8c0':az%45===0?'#b0c4d4':'#d4e0e8';
-    ln(x,oy,x,oy+H,col,az%90===0?0.9:0.5);
+    ln(x,oy,x,oy+H,col,az%90===0?0.9:0.5,null,'ACIMUTS');
     const labs={0:'N',90:'E',180:'S',270:'O',360:'N'};
     if(labs[az]) txt(labs[az],x,oy+H+S*0.032,S*0.018,'#102030',{align:'center',bold:true,mono:true});
     else if(az%30===0) txt(`${az}\u00b0`,x,oy+H+S*0.024,S*0.010,'#405868',{align:'center',mono:true});
@@ -672,11 +818,34 @@ function drawGridCartesian(R,cx,cy,S){
 }
 
 // ── RENDER PRINCIPAL ──────────────────────────────────────────────────
+// Valida latitud/longitud antes de dibujar. Antes, un campo vacio o invalido
+// caia silenciosamente en 0 deg (ecuador) y lat=500 se aceptaba sin queja.
+function validarCoords(){
+  const lv=document.getElementById('inLat').value.trim();
+  const ov=document.getElementById('inLon').value.trim();
+  if(lv===''||!isFinite(parseFloat(lv)))
+    return {ok:false,msg:'Falta la latitud (\u221290\u00b0 a 90\u00b0)'};
+  const lat=parseFloat(lv);
+  if(Math.abs(lat)>90)
+    return {ok:false,msg:`Latitud fuera de rango: ${lat}\u00b0 (v\u00e1lido \u221290 a 90)`};
+  let lon=0;
+  if(ov!==''){
+    if(!isFinite(parseFloat(ov)))
+      return {ok:false,msg:'Longitud no num\u00e9rica'};
+    lon=parseFloat(ov);
+    if(Math.abs(lon)>180)
+      return {ok:false,msg:`Longitud fuera de rango: ${lon}\u00b0 (v\u00e1lido \u2212180 a 180)`};
+  }
+  return {ok:true,lat,lon};
+}
+
 window.render=function(){
+  const v=validarCoords();
+  if(!v.ok){ setStatus(v.msg,false); document.getElementById('statusDot').className='status-dot error'; return; }
   document.getElementById('tempCanvas').style.display='none';
   document.getElementById('solarCanvas').style.display='block';
   setStatus('Generando\u2026',true);
-  requestAnimationFrame(()=>{_render();setStatus('Generado correctamente',false);});
+  requestAnimationFrame(()=>{_render();setStatus('Generado correctamente',false);yaGenerado=true;});
 };
 
 function _render(){
@@ -718,14 +887,18 @@ function _render(){
   }
 
   // Cenit
-  if(proyeccion!=='cartesian') dot(cx,cy,4.5,'#1a2f3e');
+  if(proyeccion!=='cartesian') dot(cx,cy,4.5,'#1a2f3e',null,null,'VARIOS');
 
   // ── Trayectorias mensuales ──────────────────────────────────────────
   if(showTrayect){
     const MESES_DXF=['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
       'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
     for(let mi=0;mi<12;mi++){
-      if(!activeMonths[mi]||[2,5,8,11].includes(mi))continue;
+      if(!activeMonths[mi])continue;
+      // Mar/Jun/Sep/Dic los dibuja el bloque de especiales con su trazo grueso.
+      // Si ese bloque esta apagado hay que dibujarlos aqui: antes desaparecian
+      // por completo al apagar el interruptor 'Solsticios y equinoccios'.
+      if([2,5,8,11].includes(mi)&&showEspec)continue;
       drawTray(DOY21[mi],COL_MES[mi],1.5,[],lat,R,HR,cx,cy,S,MESES_DXF[mi]);
     }
     if(showEspec){
@@ -778,13 +951,17 @@ function _render(){
         const pos=posSolar(lat,declinacion(doy),HA);
         if(!pos.visible||pos.alt<0.5)continue;
         const p=project(pos.alt,pos.az,R,HR,cx,cy,S);
-        dot(p.x,p.y,S*0.0038,ANCHOR_COLS[ai]);
+        dot(p.x,p.y,S*0.0038,ANCHOR_COLS[ai],null,null,'ANALEMAS');
       }
     }
     // Etiqueta hora en el solsticio de junio (punto más extremo de cada analema)
-    for(let h=6;h<=18;h++){
-      // Usar el DOY de mayor variación (equinoccio de sept ~DOY265 suele ser extremo)
-      const refDoy=265;
+    // Ancla la etiqueta de hora a un mes ACTIVO. Antes usaba siempre DOY 265
+    // (septiembre), asi que las etiquetas aparecian aunque septiembre estuviera
+    // deseleccionado, sobre una trayectoria que no se habia dibujado.
+    let refMiA=8;
+    if(periodo==='meses'){ refMiA=activeMonths.findIndex(v=>v); }
+    if(refMiA>=0) for(let h=6;h<=18;h++){
+      const refDoy=DOY21[refMiA];
       const eqt=eqTiempoMin(refDoy);
       const horaSolar=h+eqt/60;
       const HA=(horaSolar-12)*15;
@@ -820,7 +997,7 @@ function _render(){
         if(prev&&((prev.alt<0&&pos.alt>=0)||(prev.alt>=0&&pos.alt<0))){
           const t=prev.alt/(prev.alt-pos.alt);
           const az=prev.az+t*(pos.az-prev.az),azR=az*RAD;
-          dot(cx+HR*Math.sin(azR),cy-HR*Math.cos(azR),S*0.006,sp.col);
+          dot(cx+HR*Math.sin(azR),cy-HR*Math.cos(azR),S*0.006,sp.col,null,null,'VARIOS');
         }
         prev=pos;
       }
@@ -833,8 +1010,10 @@ function _render(){
       const pos=posSolar(lat,declinacion(cdoy),0);
       if(!pos.visible)continue;
       const p=project(pos.alt,pos.az,R,HR,cx,cy,S);
-      dot(p.x,p.y,S*0.007,'#c0900a');
-      txt(`Paso cenital ${monthDayFromDoy(cdoy)}`,p.x+S*0.012,p.y-S*0.008,
+      dot(p.x,p.y,S*0.007,'#c0900a',null,null,'CENITALES');
+      // Cooper tiene ~±0,9° de error en δ; cerca del cruce δ=φ eso desplaza la
+      // fecha ~2 días. Ademas la fecha real oscila ~1 día en el ciclo bisiesto.
+      txt(`Paso cenital ${monthDayFromDoy(cdoy)} (\u00b12 d)`,p.x+S*0.012,p.y-S*0.008,
         S*0.011,'#8a6a0a',{mono:true,bg:'rgba(253,250,244,0.88)',italic:true});
     }
   }
@@ -854,12 +1033,18 @@ function _render(){
     }
   }
 
+  // ── Mascara de sombreado ──────────────────────────────────────────────
+  // Va despues de trayectorias/analemas/horarias para velarlas, y antes del
+  // marcador solar puntual, que debe quedar siempre legible encima.
+  dibujarMascara(R,HR,cx,cy,S);
+  actualizarStatsMascara(lat);
+
   // ── Marcador solar puntual ────────────────────────────────────────────
   if(sunMarker&&sunMarker.visible){
     const p=project(sunMarker.alt,sunMarker.az,R,HR,cx,cy,S);
     ctx.beginPath();ctx.arc(p.x,p.y,S*0.022,0,2*Math.PI);
     ctx.fillStyle='rgba(240,210,30,0.18)';ctx.fill();
-    dot(p.x,p.y,S*0.013,'#f0d020','#c04800',2);
+    dot(p.x,p.y,S*0.013,'#f0d020','#c04800',2,'SOL_MANUAL');
     for(let i=0;i<8;i++){
       const ang=i*45*RAD,r1=S*0.016,r2=S*0.024;
       ctx.beginPath();ctx.moveTo(p.x+r1*Math.cos(ang),p.y+r1*Math.sin(ang));
@@ -897,16 +1082,406 @@ function _render(){
   const pLabels={stereo:'Estereográfica',polar:'Polar equidistante',cartesian:'Cartesiana'};
   document.getElementById('hdProj').textContent=pLabels[proyeccion];
   document.getElementById('hdMeta').innerHTML=
-    (city?`<span>${city}</span> &nbsp;|&nbsp; `:'')+
+    (city?`<span>${esc(city)}</span> &nbsp;|&nbsp; `:'')+
     `Lat: <span>${lat.toFixed(2)}\u00b0 ${lat>=0?'N':'S'}</span> &nbsp;|&nbsp; `+
     `Lon: <span>${Math.abs(lon).toFixed(2)}\u00b0 ${lon>=0?'E':'O'}</span><br>`+
     `Hora solar verdadera &nbsp;|&nbsp; Cooper (1969) \u00b7 Spencer (1971)`;
 }
 
+
+// =====================================================================
+// MASCARA DE SOMBREADO (shading mask / sun-path protractor)
+// =====================================================================
+// Proyecta sobre la carta la porcion de boveda que un dispositivo de
+// control solar oculta al punto de referencia del vano. Geometria clasica
+// (Olgyay; Mazria; Szokolay):
+//
+//   Muro          : todo lo que queda a mas de 90 deg de la normal esta
+//                   siempre en sombra (detras del plano de fachada).
+//   Volado        : bloquea el sol cuando  alt >= atan( tan(gamma) * cos(dAz) )
+//                   siendo gamma el angulo de sombra vertical (VSA) medido
+//                   en el plano perpendicular a la fachada.
+//   Aletas vert.  : bloquean cuando |dAz| >= angulo de sombra horizontal,
+//                   del lado correspondiente.
+//
+// LIMITE DEL METODO: la mascara supone volado y aletas de EXTENSION
+// INFINITA y es valida para UN punto (aqui, el centro del vano). Los bordes
+// del vano real ven mas cielo: el sombreado efectivo siempre es menor que
+// el que sugiere la mascara. No es un calculo de factor de sombra.
+
+let mask = {
+  on:false, az:180,
+  vol:{on:true,  g:45},   // volado horizontal, gamma = VSA
+  izq:{on:false, a:45},   // aleta izquierda  (bloquea dAz negativo)
+  der:{on:false, a:45}    // aleta derecha    (bloquea dAz positivo)
+};
+
+// Diferencia de acimut respecto de la normal del muro, en (-180, 180].
+// Positivo = a la derecha mirando desde dentro hacia fuera.
+function dAzMuro(az){ return ((az-mask.az+540)%360)-180; }
+
+// Altitud de corte del volado para un dAz dado
+function altCorteVolado(g,d){
+  if(Math.abs(d)>=90) return 0;
+  return Math.atan(Math.tan(g*RAD)*Math.cos(d*RAD))/RAD;
+}
+
+// Predicado central: el punto (az,alt) de la boveda, esta oculto?
+function enSombra(az,alt){
+  const d=dAzMuro(az);
+  if(Math.abs(d)>90) return true;                                  // muro
+  if(mask.vol.on && alt>=altCorteVolado(mask.vol.g,d)) return true; // volado
+  if(mask.izq.on && d<=-mask.izq.a) return true;                   // aleta izq
+  if(mask.der.on && d>= mask.der.a) return true;                   // aleta der
+  return false;
+}
+
+// ── Relleno de una region dada en coordenadas (az,alt) ────────────────
+// En cartesiana el eje X mapea 0..360 linealmente, asi que una region que
+// cruza el norte se parte en dos. Se resuelve dibujando el mismo camino
+// desplazado -360/0/+360 y recortando al marco: lo que sobresale se
+// descarta solo y no hay que trocear poligonos a mano.
+function rellenaRegion(pts,fill,R,HR,cx,cy,S){
+  if(pts.length<3) return;
+  ctx.save(); ctx.fillStyle=fill;
+  const offs = (proyeccion==='cartesian') ? [-360,0,360] : [0];
+  if(proyeccion==='cartesian'){
+    ctx.beginPath(); ctx.rect(cx-R,cy-R,R*2,R*2); ctx.clip();
+  }
+  for(const off of offs){
+    ctx.beginPath();
+    pts.forEach((q,i)=>{
+      const p=project(q.alt,q.az+off,R,HR,cx,cy,S);
+      i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);
+    });
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// Traza (no rellena) una polilinea en (az,alt), con salida a DXF
+function trazaMascara(pts,col,lw,dash,layer,R,HR,cx,cy,S){
+  let prev=null,prevAz=null;
+  for(const q of pts){
+    const p=project(q.alt,q.az,R,HR,cx,cy,S);
+    if(prev&&conecta(prevAz,((q.az%360)+360)%360)){
+      ctx.save();ctx.beginPath();ctx.moveTo(prev.x,prev.y);ctx.lineTo(p.x,p.y);
+      ctx.strokeStyle=col;ctx.lineWidth=lw;
+      if(dash&&dash.length)ctx.setLineDash(dash);
+      ctx.stroke();ctx.restore();
+      VEC.lines.push({x1:prev.x,y1:prev.y,x2:p.x,y2:p.y,col,lw,layer,
+        dash:(dash&&dash.length)?1:0});
+    }
+    prev=p;prevAz=((q.az%360)+360)%360;
+  }
+}
+
+// ── Construccion de las regiones ──────────────────────────────────────
+function regionMuro(){
+  const a0=mask.az+90, a1=mask.az+270, pts=[];
+  if(proyeccion==='cartesian'){
+    return [{az:a0,alt:0},{az:a1,alt:0},{az:a1,alt:90},{az:a0,alt:90}];
+  }
+  // Semidisco: arco de horizonte + cuerda (que es un diametro, porque a0 y
+  // a1 estan a 180 deg) -> exactamente la mitad de boveda tras la fachada.
+  for(let a=a0;a<=a1;a+=2) pts.push({az:a,alt:0});
+  return pts;
+}
+
+function regionVolado(){
+  const g=mask.vol.g, pts=[];
+  for(let d=-90;d<=90;d+=1.5) pts.push({az:mask.az+d, alt:altCorteVolado(g,d)});
+  if(proyeccion==='cartesian'){
+    pts.push({az:mask.az+90,alt:90},{az:mask.az-90,alt:90});
+  }
+  // En polar/estereografica la cuerda de cierre entre los extremos (dAz=+-90,
+  // alt=0) es un diametro que pasa por el cenit: cierra justo la region de
+  // altitudes por encima de la curva, que es la que oculta el volado.
+  return pts;
+}
+
+function regionAleta(a0,a1){
+  if(proyeccion==='cartesian')
+    return [{az:a0,alt:0},{az:a1,alt:0},{az:a1,alt:90},{az:a0,alt:90}];
+  const pts=[{az:a0,alt:90}];               // cenit (centro en polar)
+  for(let a=a0;a<=a1;a+=2) pts.push({az:a,alt:0});
+  return pts;
+}
+
+// ── Dibujo completo ───────────────────────────────────────────────────
+function dibujarMascara(R,HR,cx,cy,S){
+  if(!mask.on) return;
+  const FILL='rgba(24,34,46,0.52)', LINE='#12202c', CURVE='#0d6a86';
+
+  rellenaRegion(regionMuro(),FILL,R,HR,cx,cy,S);
+  if(mask.vol.on) rellenaRegion(regionVolado(),FILL,R,HR,cx,cy,S);
+  if(mask.izq.on) rellenaRegion(regionAleta(mask.az-90,mask.az-mask.izq.a),FILL,R,HR,cx,cy,S);
+  if(mask.der.on) rellenaRegion(regionAleta(mask.az+mask.der.a,mask.az+90),FILL,R,HR,cx,cy,S);
+
+  // Plano de fachada
+  if(proyeccion==='cartesian'){
+    [mask.az-90,mask.az+90].forEach(a=>
+      trazaMascara([{az:a,alt:0},{az:a,alt:90}],LINE,2.2,[],'MURO',R,HR,cx,cy,S));
+  }else{
+    trazaMascara([{az:mask.az-90,alt:0},{az:mask.az,alt:90},{az:mask.az+90,alt:0}],
+      LINE,2.2,[],'MURO',R,HR,cx,cy,S);
+  }
+  // Normal del muro (indica hacia donde mira la fachada)
+  trazaMascara([{az:mask.az,alt:90},{az:mask.az,alt:62}],LINE,2.2,[],'MURO',R,HR,cx,cy,S);
+
+  // Curva del volado
+  if(mask.vol.on){
+    const c=[];
+    for(let d=-90;d<=90;d+=1.5) c.push({az:mask.az+d,alt:altCorteVolado(mask.vol.g,d)});
+    trazaMascara(c,CURVE,2.4,[],'MASCARA',R,HR,cx,cy,S);
+    const p=project(mask.vol.g,mask.az,R,HR,cx,cy,S);
+    txt(`VSA ${mask.vol.g}\u00b0`,p.x,p.y-S*0.011,S*0.012,CURVE,
+      {align:'center',bold:true,mono:true,bg:'rgba(253,250,244,0.88)'});
+  }
+  // Bordes de aletas
+  if(mask.izq.on)
+    trazaMascara([{az:mask.az-mask.izq.a,alt:0},{az:mask.az-mask.izq.a,alt:90}],
+      CURVE,2.0,[6,4],'MASCARA',R,HR,cx,cy,S);
+  if(mask.der.on)
+    trazaMascara([{az:mask.az+mask.der.a,alt:0},{az:mask.az+mask.der.a,alt:90}],
+      CURVE,2.0,[6,4],'MASCARA',R,HR,cx,cy,S);
+
+  // Rotulo
+  const disp=[];
+  if(mask.vol.on) disp.push(`VSA \u03b3=${mask.vol.g}\u00b0`);
+  if(mask.izq.on) disp.push(`aleta izq ${mask.izq.a}\u00b0`);
+  if(mask.der.on) disp.push(`aleta der ${mask.der.a}\u00b0`);
+  txt(`M\u00e1scara \u2014 muro a ${mask.az}\u00b0${disp.length?' \u00b7 '+disp.join(' \u00b7 '):''}`,
+    S*0.038, S*0.965, S*0.012, '#0d6a86', {mono:true,bold:true});
+}
+
+// ── Proporcion constructiva de cada dispositivo ───────────────────────
+// Volado en el dintel que sombrea hasta el antepecho de un vano de altura H:
+//   tan(gamma) = H/D   ->   D/H = 1/tan(gamma)
+// Aleta vertical de vuelo P junto a un vano de ancho W:
+//   tan(angulo) = W/P  ->   P/W = 1/tan(angulo)
+// Es la misma relacion, y es la cifra que decide si el dispositivo se puede
+// construir: gamma = 11 grados suena inocuo pero pide un volado cinco veces
+// mas profundo que alto es el vano.
+function fondoRelativo(angGrados){ return 1/Math.tan(angGrados*RAD); }
+function angMinimoPara(dMax){ return Math.atan(1/Math.max(0.05,dMax))/RAD; }
+function dMaxUsuario(){
+  const v=parseFloat((document.getElementById('inDmax')||{}).value);
+  return isFinite(v)?Math.max(0.1,Math.min(6,v)):1.0;
+}
+
+// ── Muestreo de horas de sol para las estadisticas y el optimizador ───
+// Un punto por cada 15 min solares de cada dia 21 de mes, con la temperatura
+// del EPW ya convertida a hora solar. Peso igual = tiempo igual.
+function muestrearHoras(lat){
+  const out=[];
+  for(let m=0;m<12;m++){
+    const doy=DOY21[m], decl=declinacion(doy);
+    for(let h=0;h<24;h+=0.25){
+      const pos=posSolar(lat,decl,(h-12)*15);
+      if(!pos.visible||pos.alt<=0) continue;
+      const t = tempProc ? tempEnHoraSolar(m,h,doy) : NaN;
+      out.push({m,doy,h,az:pos.az,alt:pos.alt,t,cat:tempProc?clasifConfort(t,m):null});
+    }
+  }
+  return out;
+}
+
+function actualizarStatsMascara(lat){
+  const R={hot:[0,0],comfort:[0,0],cold:[0,0]};
+  if(mask.on&&tempProc){
+    for(const q of muestrearHoras(lat)){
+      if(!q.cat) continue;
+      // Solo las horas que la fachada realmente ve. Contar las que quedan
+      // detras del muro inflaba los porcentajes: una fachada oeste bloquea
+      // el 100 % de las horas frias de la manana sin hacer nada, porque
+      // esas horas nunca la alcanzan.
+      if(Math.abs(dAzMuro(q.az))>90) continue;
+      R[q.cat][1]++;
+      if(enSombra(q.az,q.alt)) R[q.cat][0]++;
+    }
+  }
+  const pon=(id,k)=>{
+    const el=document.getElementById(id);
+    el.textContent = R[k][1] ? Math.round(100*R[k][0]/R[k][1]) : '\u2014';
+  };
+  pon('mkHot','hot'); pon('mkCom','comfort'); pon('mkCold','cold');
+  document.getElementById('mkDH').textContent =
+    (mask.on&&mask.vol.on) ? fondoRelativo(mask.vol.g).toFixed(2) : '\u2014';
+  const pw=[];
+  if(mask.izq.on) pw.push(fondoRelativo(mask.izq.a).toFixed(2));
+  if(mask.der.on) pw.push(fondoRelativo(mask.der.a).toFixed(2));
+  document.getElementById('mkPW').textContent = pw.length?pw.join(' / '):'\u2014';
+  document.getElementById('maskResult').classList.toggle('visible',
+    mask.on && !!tempProc);
+}
+
+// ── Optimizador ───────────────────────────────────────────────────────
+// Maximiza la suma de (T - limite_superior_de_confort) sobre las horas que el
+// dispositivo bloquea. Las horas calurosas pesan positivo (conviene taparlas)
+// y las frescas negativo (conviene dejarlas entrar), asi que el optimo depende
+// del clima y no de una regla fija. Solo ajusta dispositivos ya activados.
+window.optimizarMascara=function(){
+  if(!tempProc){ setStatus('Cargue un EPW para optimizar',false); return; }
+  const v=validarCoords(); if(!v.ok){ setStatus(v.msg,false); return; }
+  const lat = (epwData&&epwData.lat!=null)?epwData.lat:v.lat;
+
+  const M=[];
+  for(const q of muestrearHoras(lat)){
+    const c=tempProc.comf[q.m];
+    if(!c||!c.valid||!isFinite(q.t)) continue;
+    const d=dAzMuro(q.az);
+    if(Math.abs(d)>90) continue;          // ya lo tapa el muro
+    M.push({d,alt:q.alt,w:q.t-c.hi});
+  }
+  if(!M.length){ setStatus('Sin horas utiles para optimizar',false); return; }
+
+  // El barrido se acota por el fondo maximo admitido. Sin esa cota el optimo
+  // se va siempre al extremo (gamma=1 => volado 57 veces mas profundo que la
+  // altura del vano), porque la funcion objetivo no tiene coste de tamano.
+  const gMin=Math.max(1,Math.ceil(angMinimoPara(dMaxUsuario())));
+  if(mask.vol.on){
+    let best=mask.vol.g, sBest=-Infinity;
+    for(let g=gMin;g<=89;g++){
+      let acc=0;
+      for(const q of M) if(q.alt>=altCorteVolado(g,q.d)) acc+=q.w;
+      if(acc>sBest){ sBest=acc; best=g; }
+    }
+    ctlVol.set(best);
+  }
+  // Las aletas se optimizan sobre lo que el volado NO bloquea
+  const rest = mask.vol.on ? M.filter(q=>q.alt<altCorteVolado(mask.vol.g,q.d)) : M;
+  const base = rest.length?rest:M;
+  if(mask.izq.on){
+    let best=mask.izq.a, sBest=-Infinity;
+    for(let a=gMin;a<=89;a++){
+      let acc=0; for(const q of base) if(q.d<=-a) acc+=q.w;
+      if(acc>sBest){ sBest=acc; best=a; }
+    }
+    ctlIzq.set(best);
+  }
+  if(mask.der.on){
+    let best=mask.der.a, sBest=-Infinity;
+    for(let a=gMin;a<=89;a++){
+      let acc=0; for(const q of base) if(q.d>=a) acc+=q.w;
+      if(acc>sBest){ sBest=acc; best=a; }
+    }
+    ctlDer.set(best);
+  }
+  window.render();
+  setStatus(`\u00c1ngulos optimizados (fondo m\u00e1x. D/H=${dMaxUsuario().toFixed(1)})`,false);
+};
+
+// ── Controles ─────────────────────────────────────────────────────────
+window.setMuroAz=function(a){
+  if(ctlAz) ctlAz.set(a);
+  else { mask.az=a; document.getElementById('inMaskAz').value=a; sincMuroBotones(); }
+};
+function sincMuroBotones(){
+  const map={0:'mBtnN',90:'mBtnE',180:'mBtnS',270:'mBtnO'};
+  ['mBtnN','mBtnE','mBtnS','mBtnO'].forEach(id=>
+    document.getElementById(id).classList.remove('active'));
+  if(map[mask.az]) document.getElementById(map[mask.az]).classList.add('active');
+}
+// ── Deslizador + campo numerico sobre el mismo valor ──────────────────
+// Cualquiera de los dos manda; el otro se refresca sin volver a disparar el
+// evento. Mientras se teclea en el campo NO se le reescribe el contenido, para
+// que escribir "180" no se convierta en 1 -> 18 -> 180 a cada pulsacion.
+let ctlAz=null, ctlVol=null, ctlIzq=null, ctlDer=null, ctlDmax=null;
+
+function enlazarPar(idNum, idRango, o){
+  const num=document.getElementById(idNum), rng=document.getElementById(idRango);
+  const dec = o.dec||0;
+  function norm(v){
+    if(!isFinite(v)) return null;
+    v = Math.round(v/o.step)*o.step;
+    v = parseFloat(v.toFixed(4));
+    if(o.wrap) return ((v%360)+360)%360;
+    return Math.max(o.min, Math.min(o.max, v));
+  }
+  function aplica(v, origen){
+    const w=norm(v);
+    if(w===null) return;
+    o.set(w);
+    const txt = dec ? w.toFixed(dec) : String(w);
+    if(origen!=='num') num.value=txt;
+    if(origen!=='rng') rng.value=w;
+    redibujaThrottled();
+  }
+  num.addEventListener('input', ()=>aplica(parseFloat(num.value),'num'));
+  // Al salir del campo se normaliza lo tecleado (p.ej. 400 -> 40 en un acimut)
+  num.addEventListener('change',()=>{
+    const w=norm(parseFloat(num.value));
+    if(w!==null) num.value = dec ? w.toFixed(dec) : String(w);
+  });
+  rng.addEventListener('input', ()=>aplica(parseFloat(rng.value),'rng'));
+  return { set:v=>aplica(v,null) };
+}
+
+// Arrastrar un deslizador dispara decenas de eventos 'input' por segundo y
+// cada uno redibujaria el lienzo entero (a 2160 px eso no va fluido). Se
+// coalescen en un solo repintado por fotograma.
+let _redibujaPend=false;
+function redibujaThrottled(){
+  if(!yaGenerado || _redibujaPend) return;
+  _redibujaPend=true;
+  requestAnimationFrame(()=>{
+    _redibujaPend=false;
+    const v=validarCoords();
+    if(!v.ok){
+      setStatus(v.msg,false);
+      document.getElementById('statusDot').className='status-dot error';
+      return;
+    }
+    _render();
+    setStatus('Generado correctamente',false);
+  });
+}
+
+function initMascara(){
+  const g=id=>document.getElementById(id);
+
+  g('swMask').addEventListener('change',()=>{
+    mask.on=g('swMask').checked;
+    const b=g('maskBody');
+    b.style.display=mask.on?'flex':'none'; b.style.flexDirection='column';
+    if(yaGenerado) window.render();
+  });
+
+  // Acimut del muro
+  ctlAz = enlazarPar('inMaskAz','rgMaskAz',{
+    min:0, max:359, step:1, wrap:true,
+    set:v=>{ mask.az=v; sincMuroBotones(); }
+  });
+
+  // VSA del volado y HSA de las aletas
+  ctlVol = enlazarPar('inVolG','rgVolG',{min:1,max:89,step:1,set:v=>mask.vol.g=v});
+  ctlIzq = enlazarPar('inAletaI','rgAletaI',{min:1,max:89,step:1,set:v=>mask.izq.a=v});
+  ctlDer = enlazarPar('inAletaD','rgAletaD',{min:1,max:89,step:1,set:v=>mask.der.a=v});
+
+  // Fondo maximo admitido (solo acota al optimizador, no redibuja geometria)
+  ctlDmax = enlazarPar('inDmax','rgDmax',{min:0.1,max:6,step:0.1,dec:1,set:()=>{}});
+
+  // Interruptores de cada dispositivo: ademas de activarlo, atenuan sus campos
+  [['swVol',mask.vol,'fldVol'],['swAletaI',mask.izq,'fldAletaI'],
+   ['swAletaD',mask.der,'fldAletaD']]
+    .forEach(([id,obj,fld])=>{
+      const sinc=()=>{
+        obj.on=g(id).checked;
+        g(fld).classList.toggle('off',!obj.on);
+      };
+      g(id).addEventListener('change',()=>{ sinc(); if(yaGenerado) window.render(); });
+      sinc();
+    });
+
+  sincMuroBotones();
+}
+
 // ── Calcular posición solar puntual ───────────────────────────────────
 window.calcularSol=function(){
-  const latVal=document.getElementById('inLat').value;
-  const lat=latVal===''?0:parseFloat(latVal);
+  const v=validarCoords();
+  if(!v.ok){ setStatus(v.msg,false); document.getElementById('statusDot').className='status-dot error'; return; }
+  const lat=v.lat;
   const dateStr=document.getElementById('inDate').value;
   const timeStr=document.getElementById('inTime').value;
   if(!dateStr||!timeStr){alert('Seleccione fecha y hora.');return;}
@@ -924,7 +1499,10 @@ window.calcularSol=function(){
   document.getElementById('sunResult').classList.add('visible');
   sunMarker={alt:pos.alt,az:pos.az,visible:pos.visible,
     label:`${d.getDate()} ${MESES[d.getMonth()]} \u00b7 ${timeStr}`};
-  _render();
+  document.getElementById('tempCanvas').style.display='none';
+  document.getElementById('solarCanvas').style.display='block';
+  _render(); yaGenerado=true;
+  setStatus('Posici\u00f3n solar marcada',false);
 };
 
 // ── Control proyección ────────────────────────────────────────────────
@@ -938,6 +1516,9 @@ window.setProyeccion=function(p){
   ['stereo','polar','cartesian'].forEach((v,i)=>
     document.getElementById(`pBtn${i}`).classList.toggle('active',v===p));
   document.getElementById('projDesc').textContent=PROJ_DESC[p];
+  const pLabels={stereo:'Estereográfica',polar:'Polar equidistante',cartesian:'Cartesiana'};
+  document.getElementById('hdProj').textContent=pLabels[p];
+  if(yaGenerado) window.render();
 };
 
 // ── Control período ───────────────────────────────────────────────────
@@ -948,11 +1529,13 @@ window.setPeriodo=function(p){
   const ms=document.getElementById('monthSelector');
   if(p==='meses'){ms.style.display='flex';ms.style.flexDirection='column';ms.style.gap='7px';}
   else ms.style.display='none';
+  if(yaGenerado) window.render();
 };
 
 window.selTodos=function(v){
   mesesSel=new Array(12).fill(v);
   document.querySelectorAll('.month-cb').forEach(cb=>{cb.checked=v;});
+  if(yaGenerado) window.render();
 };
 
 // ── Exportar PNG ──────────────────────────────────────────────────────
@@ -967,6 +1550,13 @@ window.exportPNG=function(){
 // ── Exportar DXF R12 ──────────────────────────────────────────────────
 window.exportDXF=function(){
   if(!VEC.lines.length&&!VEC.circles.length){alert('Genere la carta primero.');return;}
+  // La carta de temperatura es raster (celdas rellenas): no tiene geometria
+  // vectorial exportable. Avisar para que nadie crea que exporto lo que ve.
+  if(document.getElementById('tempCanvas').style.display==='block'){
+    if(!confirm('El DXF corresponde a la CARTA SOLAR, no a la carta de temperatura '+
+                '(las celdas de confort son raster y no se exportan a DXF).\n\n¿Continuar?'))
+      return;
+  }
   const S=canvas.width;
   const toX=x=>((x-S/2)*0.1).toFixed(6);
   const toY=y=>(-(y-S/2)*0.1).toFixed(6);
@@ -983,7 +1573,8 @@ window.exportDXF=function(){
     return'TRAYECT';
   }
   const LC={HORIZONTE:7,ALTITUDES:5,ACIMUTS:3,TRAYECT:4,
-            HORARIAS:1,CENITALES:2,SOL_MANUAL:6,ANALEMAS:6,TEXTOS:7,VARIOS:8};
+            HORARIAS:1,CENITALES:2,SOL_MANUAL:6,ANALEMAS:6,TEXTOS:7,VARIOS:8,
+            MASCARA:4,MURO:8};
   const CAPAS=Object.keys(LC);
   const rows=[];
   function G(c,v){rows.push(`${String(c).padStart(3)}\n${String(v)}`);}
@@ -999,7 +1590,7 @@ window.exportDXF=function(){
   G(0,'SECTION');G(2,'TABLES');
   G(0,'TABLE');G(2,'LTYPE');G(70,2);
   G(0,'LTYPE');G(2,'CONTINUOUS');G(70,0);G(3,'Solid line');G(72,65);G(73,0);G(40,'0.0');
-  G(0,'LTYPE');G(2,'DASHED');G(70,0);G(3,'__ __ __');G(72,65);G(73,2);G(40,6.0);G(49,4.0);G(49,-2.0);
+  G(0,'LTYPE');G(2,'DASHED');G(70,0);G(3,'__ __ __');G(72,65);G(73,2);G(40,1.2);G(49,0.8);G(49,-0.4);
   G(0,'ENDTAB');
   // Tabla de estilos de texto — Arial Narrow
   G(0,'TABLE');G(2,'STYLE');G(70,1);
@@ -1034,13 +1625,19 @@ window.exportDXF=function(){
   G(0,'SECTION');G(2,'ENTITIES');
   for(const c of VEC.circles){
     if(c.r<=0)continue;
-    // Solo exportar: horizonte (altDeg===0) y circulos de altitud en multiplos de 10 (10..80)
-    // Ignorar circulos sin tag (altDeg===undefined) y los de 5, 1, 2, etc.
-    const ad=c.altDeg;
-    if(ad===undefined)continue;          // no es circulo de cuadricula
-    if(ad!==0 && ad%10!==0)continue;     // no es horizonte ni multiplo de 10
-    const lyr=ad===0?'HORIZONTE':'ALTITUDES';
-    G(0,'CIRCLE');G(8,lyr);G(62,LC[lyr]);
+    let lyr;
+    if(c.isDot){
+      // Marcadores puntuales (sol manual, pasos cenitales, anclas, horizonte).
+      // Antes no se exportaban y la capa SOL_MANUAL salia siempre vacia.
+      lyr=c.layer||'VARIOS';
+    }else{
+      // Cuadricula: solo horizonte (altDeg===0) y altitudes multiplo de 10
+      const ad=c.altDeg;
+      if(ad===undefined)continue;
+      if(ad!==0 && ad%10!==0)continue;
+      lyr=ad===0?'HORIZONTE':'ALTITUDES';
+    }
+    G(0,'CIRCLE');G(8,lyr);G(62,LC[lyr]||7);
     G(10,toX(c.cx));G(20,toY(c.cy));G(30,'0.0');G(40,toR(c.r));
   }
   for(const l of VEC.lines){
@@ -1050,7 +1647,11 @@ window.exportDXF=function(){
     const aci = (l.layer && MES_ACI[MESES_DXF_EXP.indexOf(l.layer)] !== undefined)
       ? MES_ACI[MESES_DXF_EXP.indexOf(l.layer)]
       : (LC[lyr]||7);
-    G(0,'LINE');G(8,lyr);G(62,aci);
+    G(0,'LINE');G(8,lyr);
+    // El punteado se declaraba en la tabla LTYPE pero ninguna entidad lo usaba:
+    // el tramo Dic->Jun del analema y las horarias impares salian continuas.
+    if(l.dash) G(6,'DASHED');
+    G(62,aci);
     G(10,toX(l.x1));G(20,toY(l.y1));G(30,'0.0');
     G(11,toX(l.x2));G(21,toY(l.y2));G(31,'0.0');
   }
@@ -1068,7 +1669,10 @@ window.exportDXF=function(){
     G(7,'ARIAL_NARROW');  // estilo de texto
     G(10,toX(t.x));G(20,toY(t.y));G(30,'0.0');
     G(40,Math.max(1.0,t.size*0.1).toFixed(3));G(1,ts);
-    G(72,1);G(11,toX(t.x));G(21,toY(t.y));G(31,'0.0');
+    // Respetar la alineacion usada en canvas (antes todo salia centrado)
+    const j = t.align==='center'?1 : t.align==='right'?2 : 0;
+    G(72,j);
+    if(j){G(11,toX(t.x));G(21,toY(t.y));G(31,'0.0');}
   }
   G(0,'ENDSEC');G(0,'EOF');
 
@@ -1096,7 +1700,7 @@ function initMonthGrid(){
   MESES.forEach((m,i)=>{
     const lbl=document.createElement('label');lbl.className='month-cb-label';
     const cb=document.createElement('input');cb.type='checkbox';cb.className='month-cb';cb.checked=true;
-    cb.addEventListener('change',()=>{mesesSel[i]=cb.checked;});
+    cb.addEventListener('change',()=>{mesesSel[i]=cb.checked;if(yaGenerado)window.render();});
     lbl.appendChild(cb);lbl.appendChild(document.createTextNode(m));
     grid.appendChild(lbl);
   });
@@ -1108,7 +1712,8 @@ function initMonthGrid(){
 // Superpone la temperatura del aire (de un archivo .epw) sobre la trayectoria
 // solar, coloreando las horas según el modelo de confort adaptativo de
 // ASHRAE 55-2010:   T_confort = 0.31·T_pma + 17.8   (°C)
-//   · banda 80% aceptabilidad: ±3.5 K   · banda 90%: ±2.5 K
+//   · banda 90% aceptabilidad: ±2.5 K   · banda 80%: ±3.5 K
+// Se usa la del 90% (ver BANDA_PCT).
 // donde T_pma es la temperatura media exterior prevaleciente. Para "no afectar
 // los datos con picos históricos" se usan PROMEDIOS PONDERADOS por media
 // recortada (se descartan las colas alta/baja antes de promediar), tanto en la
@@ -1121,9 +1726,18 @@ let tempProc=null;    // {repTH:[12][24], Tpma:[12], comf:[12]}
 
 const COMF_COL={ cold:'#3b53c4', comfort:'#46af3c', hot:'#e0691c' };
 
+// ── Banda de aceptabilidad ASHRAE 55 ─────────────────────────────────
+// La norma define dos bandas alrededor de T_confort = 0.31·T_pma + 17.8:
+//   90 % de aceptabilidad -> ±2.5 K      80 % de aceptabilidad -> ±3.5 K
+// La herramienta trabaja con la del 90 % (la mas exigente). Fuente unica de
+// verdad: cambiar BANDA_PCT re-rotula la leyenda y recalcula los limites.
+const BANDA_PCT = 90;
+const BANDA_K   = (BANDA_PCT===90) ? 2.5 : 3.5;
+
 function setEpwStatus(msg, ok){
   document.getElementById('epwText').textContent=msg;
-  document.getElementById('epwDot').className='status-dot'+(ok===false?'':'');
+  // Las dos ramas daban la misma clase: el punto nunca cambiaba de color.
+  document.getElementById('epwDot').className='status-dot'+(ok===false?' error':'');
 }
 
 // ── Parser EPW ───────────────────────────────────────────────────────────
@@ -1132,7 +1746,7 @@ function parseEPW(text){
   if(lines.length<20) return null;
   const loc=(lines[0]||'').split(',');
   const city=(loc[1]||'').trim();
-  const lat=parseFloat(loc[6]), lon=parseFloat(loc[7]);
+  const lat=parseFloat(loc[6]), lon=parseFloat(loc[7]), tz=parseFloat(loc[8]);
   const hourly=[];
   for(let i=8;i<lines.length;i++){
     const f=lines[i].split(',');
@@ -1142,7 +1756,8 @@ function parseEPW(text){
     hourly.push({m:m-1, d, h:((h-1)%24+24)%24, t});
   }
   if(hourly.length<200) return null;
-  return {city, lat:isFinite(lat)?lat:null, lon:isFinite(lon)?lon:null, hourly};
+  return {city, lat:isFinite(lat)?lat:null, lon:isFinite(lon)?lon:null,
+          tz:isFinite(tz)?tz:null, hourly};
 }
 
 // ── Media recortada (descarta colas → robusta frente a picos) ─────────────
@@ -1167,7 +1782,9 @@ function procesarTemp(epw){
   const Tpma=monthVals.map(v=> v.length? trimmedMean(v,0.05):NaN);
   const comf=Tpma.map(tp=>{
     const tc=0.31*tp+17.8;
-    return {tc, lo80:tc-3.5, hi80:tc+3.5, lo90:tc-2.5, hi90:tc+2.5, valid:tp>=10&&tp<=33.5, tp};
+    // lo/hi son los limites de la banda activa (90 % por defecto). Antes se
+    // calculaban ademas lo80/hi80 que nunca se usaban.
+    return {tc, lo:tc-BANDA_K, hi:tc+BANDA_K, valid:tp>=10&&tp<=33.5, tp};
   });
   return {repTH, Tpma, comf};
 }
@@ -1175,9 +1792,51 @@ function procesarTemp(epw){
 function clasifConfort(t, mes){
   const c=tempProc.comf[mes];
   if(!isFinite(t)||!c) return null;
-  if(t<c.lo90) return 'cold';
-  if(t>c.hi90) return 'hot';
+  // ASHRAE 55 declara el modelo adaptativo inaplicable fuera de 10-33,5 degC de
+  // temperatura exterior prevaleciente. 'valid' se calculaba y no se consultaba:
+  // el modelo se aplicaba igual en climas de altiplano.
+  if(!c.valid) return null;
+  if(t<c.lo) return 'cold';
+  if(t>c.hi) return 'hot';
   return 'comfort';
+}
+
+// Meses cuyo T_pma cae fuera del rango de aplicabilidad
+function mesesFueraDeRango(){
+  const M=[];
+  for(let m=0;m<12;m++){
+    const c=tempProc.comf[m];
+    if(c&&isFinite(c.tp)&&!c.valid) M.push(MESES[m]);
+  }
+  return M;
+}
+
+// ── §3.2 Conversion hora de reloj (EPW) <-> hora solar verdadera ──────
+// El EPW registra en hora ESTANDAR LOCAL; las posiciones solares se calculan en
+// hora SOLAR VERDADERA. Ignorar la diferencia desfasa las celdas hasta ~22 min
+// en Cali (EqT entre -14,6 y +16,4 min mas -6,1 min de correccion de meridiano).
+//   h_solar = h_reloj + EqT/60 + (L_local - 15*TZ)/15
+function correccionSolar(doy){
+  if(!epwData) return 0;
+  const lon = epwData.lon!=null ? epwData.lon : 0;
+  const tz  = epwData.tz!=null  ? epwData.tz  : Math.round(lon/15);
+  return eqTiempoMin(doy)/60 + (lon - 15*tz)/15;
+}
+
+// Temperatura a una hora SOLAR dada, interpolando entre las horas de reloj del
+// EPW. Antes se hacia Math.round(h)%24, que ademas colapsaba los 33 nodos de la
+// malla (paso 0,5 h) en solo 17 temperaturas distintas.
+function tempEnHoraSolar(m, hSolar, doy){
+  const row=tempProc.repTH[m];
+  if(!row) return NaN;
+  const hReloj = hSolar - correccionSolar(doy);
+  const x = ((hReloj%24)+24)%24;
+  const i0=Math.floor(x), i1=(i0+1)%24, f=x-i0;
+  const a=row[i0], b=row[i1];
+  if(!isFinite(a)&&!isFinite(b)) return NaN;
+  if(!isFinite(a)) return b;
+  if(!isFinite(b)) return a;
+  return a+(b-a)*f;
 }
 
 // ── Dibujar un semestre (rejilla mes×hora coloreada por confort) ──────────
@@ -1189,12 +1848,12 @@ function drawSemester(sem, lat, S, pad){
 
   // Rejilla proyectada (mes × hora)
   const grid=months.map(m=>{
-    const decl=declinacion(DOY21[m]);
+    const doy=DOY21[m], decl=declinacion(doy);
     return hoursList.map(h=>{
       const HA=(h-12)*15, pos=posSolar(lat,decl,HA);
       if(!pos.visible||pos.alt<=0.1) return null;
       const p=project(pos.alt,pos.az,R,HR,cx,cy,S);
-      const t=tempProc.repTH[m][Math.round(h)%24];
+      const t=tempEnHoraSolar(m, h, doy);   // h es hora SOLAR; convierte y interpola
       return {x:p.x,y:p.y,t};
     });
   });
@@ -1248,8 +1907,15 @@ function drawComfortLegend(g, tc, S, pad, legendH){
   });
   // Resumen a la derecha
   g.fillStyle='#27323c'; g.font=`${S*0.0122}px 'Source Serif 4',Georgia,serif`; g.textAlign='left';
-  g.fillText(`Temperatura media anual: ${f(annual,1)} °C     ·     Confort adaptativo ASHRAE 55-2010 (banda 90 %):  T_conf = 0.31 · T_pma + 17.8 °C   ±2.5 K`,
+  g.fillText(`Temperatura media anual: ${f(annual,1)} °C     ·     Confort adaptativo ASHRAE 55-2010 (banda ${BANDA_PCT} %):  T_conf = 0.31 · T_pma + 17.8 °C   ±${BANDA_K.toFixed(1)} K`,
     x+S*0.015, y+sw/2);
+  // Aviso de meses fuera del rango de aplicabilidad (10–33,5 °C)
+  const fuera=mesesFueraDeRango();
+  if(fuera.length){
+    g.fillStyle='#b83018'; g.font=`bold ${S*0.0112}px 'Source Serif 4',Georgia,serif`;
+    g.fillText(`Sin colorear (T_pma fuera de 10–33,5 °C, modelo no aplicable): ${fuera.join(', ')}`,
+      x+S*0.015, y+sw/2+S*0.017);
+  }
 
   // 2) Tabla mensual
   y += sw + S*0.024;
@@ -1258,8 +1924,8 @@ function drawComfortLegend(g, tc, S, pad, legendH){
   const rows=[
     {lab:'Mes',                      get:m=>meses[m],                     color:'#1a2f3e', bold:true},
     {lab:'T media (°C)',             get:m=>f(tempProc.Tpma[m],1),        color:'#2a3640'},
-    {lab:'Confort — límite inf. (°C)', get:m=>f(tempProc.comf[m].lo90,1), color:COMF_COL.cold},
-    {lab:'Confort — límite sup. (°C)', get:m=>f(tempProc.comf[m].hi90,1), color:COMF_COL.hot},
+    {lab:'Confort — límite inf. (°C)', get:m=>f(tempProc.comf[m].lo,1), color:COMF_COL.cold},
+    {lab:'Confort — límite sup. (°C)', get:m=>f(tempProc.comf[m].hi,1), color:COMF_COL.hot},
   ];
   rows.forEach((row,ri)=>{
     const ry=y+ri*rowH+rowH/2;
@@ -1274,8 +1940,11 @@ function drawComfortLegend(g, tc, S, pad, legendH){
   // 3) Nota de método + lectura de colores
   const ny=y+rows.length*rowH+S*0.014;
   g.fillStyle='#5a6a76'; g.font=`${S*0.0102}px 'JetBrains Mono',monospace`; g.textAlign='left';
-  g.fillText('Color por celda: AZUL si T < limite inf. · VERDE si esta dentro de la banda · NARANJA si T > limite sup.   T = media recortada hora-a-hora (sin picos).', x0, ny);
-  const meta=(epwData.city?epwData.city+'  ·  ':'')+'Lat '+(epwData.lat!=null?epwData.lat.toFixed(2):'—')+'°  ·  '+epwData.hourly.length+' h';
+  g.fillText('Color por celda: AZUL si T < limite inf. · VERDE si esta dentro de la banda · NARANJA si T > limite sup.', x0, ny);
+  g.fillText('T = media recortada al 10 % por (mes, hora) — estrecha algo la oscilacion diurna. T_pma = media recortada al 5 % del mes: aproxima,', x0, ny+S*0.0135);
+  g.fillText('pero NO reproduce, la media movil de 7–30 dias que define ASHRAE 55. Se colorea temperatura del AIRE EXTERIOR, no operativa interior.', x0, ny+S*0.027);
+  const meta=(epwData.city?epwData.city+'  ·  ':'')+'Lat '+(epwData.lat!=null?epwData.lat.toFixed(2):'—')+'°  ·  '
+    +'TZ '+(epwData.tz!=null?(epwData.tz>=0?'+':'')+epwData.tz:'—')+'  ·  '+epwData.hourly.length+' h  ·  hora solar verdadera';
   g.textAlign='right'; g.fillText(meta, tc.width-pad*1.5, ny);
 }
 
@@ -1335,9 +2004,25 @@ window.exportTempPNG=function(){
 document.getElementById('inEPW').addEventListener('change',function(e){
   const file=e.target.files[0]; if(!file) return;
   const reader=new FileReader();
+  reader.onerror=()=>{
+    epwData=null; tempProc=null;
+    document.getElementById('btnTemp').disabled=true;
+    document.getElementById('btnOptim').disabled=true;
+    setEpwStatus('No se pudo leer el archivo',false);
+  };
   reader.onload=ev=>{
     const parsed=parseEPW(ev.target.result);
-    if(!parsed){ setEpwStatus('EPW no válido o ilegible',false); return; }
+    if(!parsed){
+      // Antes se conservaba el epwData anterior y el boton seguia habilitado:
+      // se podia generar una carta con datos del archivo que uno creia sustituir.
+      epwData=null; tempProc=null;
+      document.getElementById('btnTemp').disabled=true;
+      document.getElementById('btnOptim').disabled=true;
+      document.getElementById('tempCanvas').style.display='none';
+      document.getElementById('solarCanvas').style.display='block';
+      setEpwStatus('EPW no válido o ilegible',false);
+      return;
+    }
     epwData=parsed;
     // Autocompletar lat/lon/ciudad si vienen en el EPW
     if(parsed.lat!=null) document.getElementById('inLat').value=parsed.lat.toFixed(4);
@@ -1345,6 +2030,12 @@ document.getElementById('inEPW').addEventListener('change',function(e){
     if(parsed.city && !document.getElementById('inCity').value.trim())
       document.getElementById('inCity').value=parsed.city;
     document.getElementById('btnTemp').disabled=false;
+    // El optimizador de la mascara necesita el clima: se habilita aqui y se
+    // recalcula tempProc para que las estadisticas esten listas sin tener que
+    // generar antes la carta de temperatura.
+    tempProc=procesarTemp(epwData);
+    document.getElementById('btnOptim').disabled=false;
+    if(yaGenerado) window.render();
     setEpwStatus(`${parsed.city||'EPW'} · ${parsed.hourly.length} h cargadas`, true);
   };
   reader.readAsText(file);
@@ -1352,10 +2043,17 @@ document.getElementById('inEPW').addEventListener('change',function(e){
 });
 
 
+// ── §5.1 Los interruptores de capas cambiaban el estado pero no redibujaban:
+// la carta en pantalla quedaba desactualizada sin ninguna senal visible.
+['swAnalema','swTrayect','swHorarias','swEspeciales','swCenit','swGrid']
+  .forEach(id=>document.getElementById(id)
+    .addEventListener('change',()=>{ if(yaGenerado) window.render(); }));
+
 // ── Boot ──────────────────────────────────────────────────────────────
 canvas=document.getElementById('solarCanvas');
 ctx=canvas.getContext('2d');
 initMonthGrid();
+initMascara();
 const now=new Date();
 document.getElementById('inDate').value=
   `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
