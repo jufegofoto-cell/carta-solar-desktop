@@ -50,6 +50,7 @@ jobs:
             'Mascara de sombreado'        = 'function dibujarMascara'
             'Deslizador + campo numerico' = 'function enlazarPar'
             'Repintado coalescido'        = 'function redibujaThrottled'
+            'Sello de version CS 2.0.0'   = "const APP_VER='CS 2.0.0'"
           }
           $faltan = @()
           foreach ($m in $marcadores.GetEnumerator()) {
@@ -119,6 +120,27 @@ jobs:
       # choca con action-gh-release (assets duplicados o error 422).
       - name: Build portable + installer (x64)
         run: npm run dist
+
+      # Comprobacion cruzada: la version del HTML y la de package.json deben
+      # coincidir. Si no, el ejecutable se llamaria 2.1.0 llevando dentro el
+      # HTML 2.0.0, que es justo el tipo de desajuste que hace creer que una
+      # funcion "no esta" cuando en realidad se empaqueto una version anterior.
+      - name: Verificar que HTML y package.json van a la par
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pkg  = (Get-Content 'package.json' -Raw | ConvertFrom-Json).version
+          $html = Get-Content 'carta_solar.html' -Raw -Encoding UTF8
+          if ($html -match "const APP_VER='CS ([0-9][^']*)'") {
+            $ver = $Matches[1]
+            Write-Host "package.json : $pkg"
+            Write-Host "carta_solar  : $ver"
+            if ($ver -ne $pkg) {
+              throw "Descuadre de version: package.json dice $pkg y el HTML dice $ver."
+            }
+          } else {
+            throw 'El HTML no declara APP_VER; no se puede comprobar la version.'
+          }
 
       - name: Listar el resultado
         shell: pwsh
