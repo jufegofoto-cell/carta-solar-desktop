@@ -22,6 +22,9 @@ body{background:var(--bg);font-family:'Source Serif 4',Georgia,serif;min-height:
 .masthead{width:100%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:space-between;padding:14px 32px;gap:20px;flex-wrap:wrap;}
 .masthead h1{font-size:1.25rem;font-weight:600;letter-spacing:-0.3px;line-height:1.2;}
 .masthead h1 em{font-style:italic;color:#e8c080;font-weight:300;}
+.ver-badge{display:inline-block;margin-left:8px;padding:1px 6px;border-radius:3px;
+  background:#e8eef3;color:#3a5870;font-family:'JetBrains Mono',monospace;
+  font-size:0.60rem;letter-spacing:.04em;vertical-align:1px;}
 .proj-badge{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:0.56rem;background:rgba(255,255,255,0.09);color:#a0c8e0;border-radius:3px;padding:1px 6px;margin-left:6px;letter-spacing:0.5px;text-transform:uppercase;vertical-align:middle;}
 .masthead-sub{font-family:'JetBrains Mono',monospace;font-size:0.61rem;color:#5a7a92;margin-top:2px;}
 .masthead-meta{font-family:'JetBrains Mono',monospace;font-size:0.66rem;color:#8aa8bc;line-height:1.9;text-align:right;}
@@ -124,7 +127,8 @@ input[type=range].sl:focus-visible::-moz-range-thumb{box-shadow:0 0 0 4px rgba(2
 <div class="masthead">
   <div>
     <h1>Carta Solar<span class="proj-badge" id="hdProj">Estereográfica</span></h1>
-    <div class="masthead-sub">Bioclimática · Análisis de radiación solar</div>
+    <div class="masthead-sub">Bioclimática · Análisis de radiación solar
+      <span class="ver-badge" id="hdVer">CS 2.0.0</span></div>
   </div>
   <div class="masthead-meta" id="hdMeta">
     Ingrese coordenadas y genere la carta<br>
@@ -1248,7 +1252,7 @@ function dibujarMascara(R,HR,cx,cy,S){
 
   // Rotulo
   const disp=[];
-  if(mask.vol.on) disp.push(`VSA \u03b3=${mask.vol.g}\u00b0`);
+  if(mask.vol.on) disp.push(`VSA ${mask.vol.g}\u00b0`);
   if(mask.izq.on) disp.push(`aleta izq ${mask.izq.a}\u00b0`);
   if(mask.der.on) disp.push(`aleta der ${mask.der.a}\u00b0`);
   txt(`M\u00e1scara \u2014 muro a ${mask.az}\u00b0${disp.length?' \u00b7 '+disp.join(' \u00b7 '):''}`,
@@ -1661,6 +1665,12 @@ window.exportDXF=function(){
       .replace(/[íÍìÌ]/g,'i').replace(/[óÓòÒ]/g,'o')
       .replace(/[úÚùÙ]/g,'u').replace(/[ñÑ]/g,'n')
       .replace(/°/g,'deg').replace(/[·•]/g,'-')
+      // R12 no es Unicode: hay que transliterar antes del descarte final.
+      // Sin estas lineas, '+-' y la raya salian como '?' en las etiquetas de
+      // paso cenital y de mascara.
+      .replace(/±/g,'+/-').replace(/×/g,'x').replace(/[–—―]/g,'-')
+      .replace(/[“”«»]/g,'"').replace(/[‘’]/g,"'").replace(/§/g,'S')
+      .replace(/γ/g,'gamma').replace(/δ/g,'delta').replace(/φ/g,'phi')
       .replace(/[^\x20-\x7E]/g,'?').trim().substring(0,250);
   }
   for(const t of VEC.texts){
@@ -1685,7 +1695,7 @@ window.exportDXF=function(){
   document.body.appendChild(a);a.click();document.body.removeChild(a);
   setTimeout(()=>URL.revokeObjectURL(a.href),2000);
   const capasUsadas=new Set(VEC.lines.map(l=>l.layer||capaDe(l.col)));
-  setStatus(`DXF exportado \u2014 ${VEC.lines.length} lin. \u00b7 ${capasUsadas.size} capas`,false);
+  setStatus(`DXF exportado (${APP_VER}) \u2014 ${VEC.lines.length} lin. \u00b7 ${capasUsadas.size} capas`,false);
 };
 
 // ── Status ────────────────────────────────────────────────────────────
@@ -1723,6 +1733,10 @@ function initMonthGrid(){
 
 let epwData=null;     // {city,lat,lon,hourly:[{m,d,h,t}]}
 let tempProc=null;    // {repTH:[12][24], Tpma:[12], comf:[12]}
+
+// Version del HTML. Sirve para identificar que build lleva un ejecutable:
+// aparece en el masthead, en el pie de la carta y en el DXF exportado.
+const APP_VER='CS 2.0.0';
 
 const COMF_COL={ cold:'#3b53c4', comfort:'#46af3c', hot:'#e0691c' };
 
