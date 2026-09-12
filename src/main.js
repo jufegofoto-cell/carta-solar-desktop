@@ -7,6 +7,7 @@
 'use strict';
 const { app, BrowserWindow, Menu, shell, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 const APP_HTML = path.join(__dirname, '..', 'carta_solar.html');
 const APP_VERSION = app.getVersion();
@@ -21,6 +22,19 @@ else {
 }
 
 function createMainWindow() {
+  // Si el HTML no quedó dentro del paquete, avisar en vez de abrir una ventana
+  // en blanco. Desde un .exe ya distribuido ese fallo es casi imposible de
+  // diagnosticar; el mensaje apunta directo a la clave "files" de package.json.
+  if (!fs.existsSync(APP_HTML)) {
+    dialog.showErrorBox('Carta Solar — instalación incompleta',
+      'No se encontró carta_solar.html dentro de la aplicación.\n\n' +
+      'Ruta esperada:\n' + APP_HTML + '\n\n' +
+      'Revise la clave "files" de package.json y que el archivo exista en la ' +
+      'raíz del repositorio.');
+    app.quit();
+    return null;
+  }
+
   const win = new BrowserWindow({
     width: 1440, height: 920, minWidth: 1024, minHeight: 680,
     backgroundColor: '#f4f1ec',
@@ -32,6 +46,7 @@ function createMainWindow() {
     }
   });
   win.once('ready-to-show', () => win.show());
+  configurarDescargas(win);
   win.loadFile(APP_HTML);
 
   // Enlaces externos → navegador del sistema; nada saca al usuario de la app.
@@ -43,6 +58,39 @@ function createMainWindow() {
     if (!url.startsWith('file://')) { e.preventDefault(); if (/^https?:\/\//i.test(url)) shell.openExternal(url); }
   });
   return win;
+}
+
+// ── Descargas: DXF y PNG ─────────────────────────────────────────────
+// El HTML exporta con <a download> sobre un Blob (DXF) o un data URL (PNG).
+// Sin esto Electron guarda en la carpeta de descargas sin preguntar, que no
+// sirve en una herramienta de proyecto: hay que poder elegir la carpeta de la
+// entrega. Los nombres ya vienen saneados a [a-z0-9_] desde el HTML, así que
+// el nombre de estación del EPW no puede fabricar rutas.
+function configurarDescargas(win) {
+  win.webContents.session.on('will-download', (_e, item) => {
+    const nombre = item.getFilename() || 'carta_solar';
+    const ext = path.extname(nombre).toLowerCase();
+    const filtros = {
+      '.dxf': [{ name: 'Dibujo DXF (AutoCAD R12)', extensions: ['dxf'] }],
+      '.png': [{ name: 'Imagen PNG', extensions: ['png'] }]
+    }[ext] || [];
+
+    item.setSaveDialogOptions({
+      title: ext === '.dxf' ? 'Guardar DXF' : 'Guardar imagen',
+      defaultPath: path.join(app.getPath('documents'), nombre),
+      filters: filtros.concat([{ name: 'Todos los archivos', extensions: ['*'] }])
+    });
+
+    item.once('done', (_ev, estado) => {
+      if (estado !== 'completed' || win.isDestroyed()) return;
+      // Aviso discreto en el título: el HTML ya informa en su barra de estado,
+      // así que no hace falta un diálogo modal que interrumpa.
+      win.setTitle('Carta Solar — guardado: ' + path.basename(item.getSavePath()));
+      setTimeout(() => {
+        if (!win.isDestroyed()) win.setTitle('Carta Solar ' + APP_VERSION);
+      }, 4000);
+    });
+  });
 }
 
 function buildMenu() {
@@ -61,8 +109,17 @@ function buildMenu() {
       label: 'Acerca de Carta Solar',
       click: () => dialog.showMessageBox({
         type: 'info', title: 'Acerca de', message: 'Carta Solar ' + APP_VERSION,
-        detail: 'Carta solar bioclimática autocontenida con confort adaptativo ASHRAE 55-2010.\n' +
-                'Universidad de San Buenaventura - Pasto.\n\nElectron ' + process.versions.electron + '.',
+        detail: 'Carta solar bioclimática autocontenida.\n\n' +
+                '· Proyecciones estereográfica, polar equidistante y cartesiana\n' +
+                '· Declinación por Cooper (1969); ecuación del tiempo por Spencer (1971)\n' +
+                '· Superposición climática EPW convertida a hora solar verdadera con la\n' +
+                '  longitud y la zona horaria del propio archivo\n' +
+                '· Confort adaptativo ASHRAE 55-2010, banda del 90 % (±2,5 K)\n' +
+                '· Máscaras de sombreado: VSA del volado y HSA de las aletas\n' +
+                '· Exportación a DXF R12 por capas y a PNG\n\n' +
+                'Universidad de San Buenaventura - Pasto.\n\n' +
+                'Electron ' + process.versions.electron +
+                ' · Chromium ' + process.versions.chrome + '.',
         buttons: ['Cerrar']
       })
     }]}
