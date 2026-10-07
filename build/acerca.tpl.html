@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+<title>Acerca de Carta Solar</title>
+<!--
+  Ventana "Acerca de" de Carta Solar. Autocontenida (cero CDN): las fuentes
+  son las mismas que embebe carta_solar.html y el icono va en base64. Este
+  archivo se GENERA con build/generar_acerca.py a partir de
+  build/acerca.tpl.html; editar la plantilla, no este archivo.
+-->
+<style>
+/*@@FUENTES@@*/
+:root{--ink:#1a1f26;--ink2:#3a4550;--dim:#6a7f90;--rule:#d6dfe6;--bg:#f0ebe0;--paper:#fdfaf4;--blue:#1a4a7a;--gold:#a07820;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--ink);font-family:'Source Serif 4',Georgia,serif;font-size:15px;line-height:1.55;display:flex;flex-direction:column;}
+header{background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:18px;padding:18px 26px;flex:0 0 auto;}
+header img{width:76px;height:76px;flex:0 0 auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35));}
+header h1{font-size:1.45rem;font-weight:600;letter-spacing:-.3px;line-height:1.15;}
+header h1 em{font-style:italic;font-weight:400;color:#e8c080;}
+header .sub{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#8aa8bc;margin-top:6px;line-height:1.7;}
+header .sub span{color:#c8dce8;}
+nav{display:flex;gap:4px;padding:0 20px;background:#252c35;flex:0 0 auto;}
+nav a{font-family:'JetBrains Mono',monospace;font-size:.68rem;letter-spacing:1px;text-transform:uppercase;color:#a9bccb;text-decoration:none;padding:9px 12px;border-bottom:2px solid transparent;}
+nav a:hover{color:#fff;}
+nav a.on{color:#fff;border-bottom-color:#e8b040;}
+main{flex:1 1 auto;overflow-y:auto;padding:22px 30px 30px;scroll-behavior:smooth;}
+section{background:var(--paper);border:1px solid var(--rule);border-radius:10px;padding:18px 22px;margin-bottom:16px;}
+h2{font-size:1.12rem;font-weight:600;color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--rule);}
+h3{font-size:.98rem;font-weight:600;margin:14px 0 4px;color:var(--ink);}
+p{margin:6px 0;color:var(--ink2);}
+ul{margin:6px 0 6px 20px;color:var(--ink2);}
+li{margin:3px 0;}
+.f{font-family:'JetBrains Mono',monospace;font-size:.8rem;background:#eef2f5;border:1px solid #dde5eb;border-radius:4px;padding:7px 10px;margin:6px 0;color:#1d3a55;white-space:pre-wrap;line-height:1.6;}
+code{font-family:'JetBrains Mono',monospace;font-size:.82em;background:#eef2f5;border-radius:3px;padding:0 4px;}
+.aviso{border-left:3px solid var(--gold);background:#faf3e2;padding:8px 12px;border-radius:0 6px 6px 0;margin:10px 0;color:#5a4a20;}
+.no li::marker{content:'✕  ';color:#b04a2a;}
+.si li::marker{content:'✓  ';color:#3a8a50;}
+.ref li{margin:6px 0;padding-left:4px;}
+.meta{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--dim);}
+footer{flex:0 0 auto;display:flex;justify-content:space-between;align-items:center;padding:10px 26px;border-top:1px solid var(--rule);background:var(--paper);}
+button{font-family:'JetBrains Mono',monospace;font-size:.75rem;background:var(--blue);color:#fff;border:0;border-radius:5px;padding:7px 18px;cursor:pointer;}
+button:hover{background:#245d96;}
+</style>
+</head>
+<body>
+<header>
+  <img src="data:image/png;base64,@@ICONO@@" alt="">
+  <div>
+    <h1>Carta Solar <em>bioclimática</em></h1>
+    <div class="sub">Versión <span id="v-app">—</span> · Electron <span id="v-el">—</span> · Chromium <span id="v-ch">—</span><br>
+    Universidad de San Buenaventura – Pasto</div>
+  </div>
+</header>
+<nav>
+  <a href="#alcance">Alcance</a>
+  <a href="#metodologia">Metodología</a>
+  <a href="#limitaciones">Limitaciones</a>
+  <a href="#referencias">Referencias</a>
+  <a href="#acerca">Créditos</a>
+</nav>
+<main id="main">
+
+<section id="alcance">
+  <h2>1 · Alcance de la aplicación</h2>
+  <p>Carta Solar es una herramienta de apoyo al <b>diseño bioclimático en etapas tempranas</b> y a la <b>docencia</b>. Representa la geometría del sol sobre la bóveda celeste de un lugar y la cruza con el clima de un archivo EPW y con la geometría de los dispositivos de control solar, para decidir qué orientaciones y qué protecciones convienen antes de pasar a la simulación detallada.</p>
+  <h3>Qué hace</h3>
+  <ul class="si">
+    <li>Traza la carta solar de cualquier latitud en tres proyecciones: estereográfica, polar equidistante y cartesiana (acimut–altitud).</li>
+    <li>Dibuja las trayectorias del día 21 de cada mes, solsticios y equinoccios, líneas horarias en hora solar verdadera, analemas (figura en 8 a hora de reloj fija) y, entre los trópicos, los dos días de paso cenital.</li>
+    <li>Calcula altitud, acimut, ángulo horario y declinación para una fecha y una hora solar dadas, y los marca sobre la carta.</li>
+    <li>Superpone la temperatura del aire de un año típico (.epw) en dos cartas semestrales, coloreando cada hora como fría, confortable o calurosa según el modelo de confort adaptativo de ASHRAE 55-2010.</li>
+    <li>Proyecta la máscara de sombreado de un vano con volado (VSA) y aletas (HSA), informa qué porcentaje de horas calurosas, confortables y frías bloquea y propone ángulos óptimos dentro de una profundidad máxima admisible.</li>
+    <li>Exporta la carta a PNG y a DXF R12 organizado por capas (una por mes, cuadrícula, máscara, marcadores) para usarla en CAD.</li>
+  </ul>
+  <h3>Qué no hace</h3>
+  <ul class="no">
+    <li>No calcula irradiancia, radiación incidente sobre superficies ni ganancias solares; la carta es geométrica.</li>
+    <li>No es una simulación térmica ni energética, ni un cálculo de luz natural.</li>
+    <li>No calcula factores de sombra ni el sombreado parcial de un vano real (ver Limitaciones).</li>
+    <li>No incluye obstrucciones del entorno (edificios vecinos, topografía, vegetación) salvo las que el usuario represente con la máscara.</li>
+    <li>No evalúa el confort interior de un espacio concreto: compara la temperatura <i>exterior</i> con la banda de confort como indicador de cuándo conviene captar o bloquear el sol.</li>
+  </ul>
+</section>
+
+<section id="metodologia">
+  <h2>2 · Metodología</h2>
+
+  <h3>2.1 Posición del sol</h3>
+  <p>La declinación se obtiene con la expresión de Cooper (1969), siendo <i>n</i> el día del año:</p>
+  <div class="f">δ = 23,45° · sen[ 360/365 · (n − 81) ]</div>
+  <p>La altitud solar α y el acimut γ<sub>s</sub> se calculan a partir de la latitud φ y del ángulo horario ω = 15° · (h<sub>solar</sub> − 12):</p>
+  <div class="f">sen α = sen φ · sen δ + cos φ · cos δ · cos ω
+γs  = atan2( sen ω , cos ω · sen φ − tan δ · cos φ ) + 180°</div>
+  <p>El acimut se mide <b>desde el Norte en sentido horario</b> (N = 0°, E = 90°, S = 180°, O = 270°) en todas las proyecciones y en el DXF. Las trayectorias mensuales corresponden al día 21 de cada mes; los solsticios al 21 de junio y al 21 de diciembre.</p>
+
+  <h3>2.2 Tiempo solar y ecuación del tiempo</h3>
+  <p>Las trayectorias y las líneas horarias se trazan en <b>hora solar verdadera</b>: a las 12 h el sol está siempre sobre el meridiano del lugar. La ecuación del tiempo (en minutos) se evalúa con la aproximación de tres términos de uso habitual en la literatura de energía solar:</p>
+  <div class="f">B = 360/364 · (n − 81)
+EqT = 9,87 · sen 2B − 7,53 · cos B − 1,5 · sen B</div>
+  <p><b>Analemas.</b> Representan la posición del sol a una misma hora de reloj durante todo el año, con ω = 15° · (h + EqT/60 − 12). El tramo junio → diciembre (declinación decreciente) se dibuja continuo y el tramo diciembre → junio, punteado.</p>
+  <p><b>Datos EPW.</b> El archivo climático registra en hora estándar local. Cada hora se convierte a hora solar verdadera con la longitud <i>L</i> y la zona horaria <i>TZ</i> del propio archivo, e interpolando linealmente entre horas consecutivas:</p>
+  <div class="f">h_solar = h_reloj + EqT/60 + (L − 15 · TZ)/15</div>
+
+  <h3>2.3 Proyecciones</h3>
+  <p>Con z = 90° − α (distancia cenital) y R el radio del gráfico:</p>
+  <ul>
+    <li><b>Estereográfica</b> (conforme): <code>r = 2R · tan(z/2)</code>. Conserva los ángulos; el cenit queda en el centro y la zona próxima al horizonte se expande.</li>
+    <li><b>Polar equidistante</b>: <code>r = R · z/90°</code>. Las altitudes quedan igualmente espaciadas.</li>
+    <li><b>Cartesiana</b>: acimut en abscisas (0–360°) y altitud en ordenadas (0–90°). Los trazos se cortan donde el sol cruza el Norte para evitar líneas espurias.</li>
+  </ul>
+
+  <h3>2.4 Pasos cenitales</h3>
+  <p>Entre los trópicos se determinan los dos días en que δ = φ (el sol pasa por el cenit al mediodía solar), interpolando linealmente entre días consecutivos. Por la precisión de la fórmula de declinación y el ciclo bisiesto, la fecha tiene una incertidumbre de unos ±2 días.</p>
+
+  <h3>2.5 Confort térmico adaptativo (ASHRAE 55-2010)</h3>
+  <p>Para cada mes se calcula la temperatura operativa de confort a partir de la temperatura media exterior prevaleciente <i>T<sub>pma</sub></i>:</p>
+  <div class="f">T_conf = 0,31 · T_pma + 17,8   (°C)
+banda del 90 % de aceptabilidad: T_conf ± 2,5 K</div>
+  <ul>
+    <li><i>T<sub>pma</sub></i> es la media del mes recortada al 5 % (se descartan las colas alta y baja) para atenuar los extremos del año típico.</li>
+    <li>La temperatura representativa de cada hora de cada mes es la media recortada al 10 % de los valores del EPW para esa combinación mes-hora.</li>
+    <li>Cada hora se clasifica como fría (por debajo de la banda), confortable o calurosa (por encima) y se colorea sobre la trayectoria solar.</li>
+    <li>Se generan dos cartas semestrales porque las trayectorias de la mitad ascendente y descendente del año se superponen en una sola.</li>
+    <li>El modelo solo es aplicable con <i>T<sub>pma</sub></i> entre 10 y 33,5 °C; los meses fuera de ese rango quedan sin clasificar y se señalan en la leyenda.</li>
+  </ul>
+
+  <h3>2.6 Máscaras de sombreado</h3>
+  <p>Siguen la geometría clásica del transportador de sombras (Olgyay; Mazria; Szokolay) para el punto central del vano. Con ΔAz la diferencia entre el acimut solar y la normal del muro:</p>
+  <ul>
+    <li><b>Muro</b>: el sol con |ΔAz| &gt; 90° queda detrás del plano de fachada.</li>
+    <li><b>Volado horizontal</b> con ángulo de sombra vertical VSA (γ): bloquea cuando <code>α ≥ atan( tan γ · cos ΔAz )</code>.</li>
+    <li><b>Aletas verticales</b> con ángulo de sombra horizontal HSA: bloquean cuando |ΔAz| supera el HSA del lado correspondiente.</li>
+  </ul>
+  <p>La proporción constructiva se informa como <code>D/H = 1/tan γ</code> para el volado (profundidad sobre altura del vano) y <code>P/W = 1/tan HSA</code> para las aletas.</p>
+  <p><b>Estadísticas y optimizador.</b> Se muestrean las horas de sol cada 15 minutos solares del día 21 de cada mes, con la temperatura del EPW ya convertida a hora solar, contando solo las horas en que el sol alcanza la fachada. El optimizador busca los ángulos que maximizan Σ(T − límite superior de confort) sobre las horas bloqueadas: las horas calurosas suman y las frescas restan, de modo que el resultado depende del clima. La búsqueda se acota con la profundidad máxima D/H indicada por el usuario.</p>
+
+  <h3>2.7 Exportación</h3>
+  <p>El DXF se escribe en formato R12 (máxima compatibilidad) con capas separadas por mes y por tipo de elemento, tipos de línea punteados y textos transliterados a ASCII. La carta de temperatura es una imagen ráster y solo se exporta a PNG.</p>
+</section>
+
+<section id="limitaciones">
+  <h2>3 · Limitaciones y precisión</h2>
+  <ul>
+    <li>La declinación de Cooper tiene un error del orden de 1°; la posición es geométrica y no corrige refracción atmosférica (≈ 0,5° cerca del horizonte). La precisión es adecuada para diseño arquitectónico, no para astronomía ni seguimiento solar.</li>
+    <li>La máscara supone volado y aletas de <b>extensión infinita</b> y es válida para un único punto (el centro del vano). Los bordes del vano real ven más cielo: el sombreado efectivo siempre es menor que el que sugiere la máscara.</li>
+    <li>Los porcentajes de horas bloqueadas son temporales (cuentan horas), no energéticos: no ponderan la intensidad de la radiación.</li>
+    <li>El EPW representa un año meteorológico típico de la estación, no un año concreto ni escenarios futuros; las estaciones rurales pueden subestimar la temperatura urbana.</li>
+    <li>El modelo adaptativo está pensado para espacios ventilados naturalmente y controlados por los ocupantes, con actividad sedentaria y vestimenta adaptable; no aplica a espacios climatizados mecánicamente.</li>
+  </ul>
+  <div class="aviso">Los resultados orientan decisiones de diseño. Para verificar desempeño térmico, lumínico o energético en etapas de detalle se recomienda la simulación con herramientas especializadas.</div>
+</section>
+
+<section id="referencias">
+  <h2>4 · Referencias</h2>
+  <ul class="ref">
+    <li>ASHRAE (2010). <i>ANSI/ASHRAE Standard 55-2010: Thermal Environmental Conditions for Human Occupancy.</i> Atlanta: ASHRAE.</li>
+    <li>Cooper, P. I. (1969). The absorption of radiation in solar stills. <i>Solar Energy</i>, 12(3), 333–346.</li>
+    <li>de Dear, R. J. y Brager, G. S. (1998). Developing an adaptive model of thermal comfort and preference. <i>ASHRAE Transactions</i>, 104(1a), 145–167.</li>
+    <li>Duffie, J. A. y Beckman, W. A. (2013). <i>Solar Engineering of Thermal Processes</i> (4.ª ed.). Hoboken: Wiley.</li>
+    <li>Mazria, E. (1979). <i>The Passive Solar Energy Book.</i> Emmaus: Rodale Press.</li>
+    <li>Olgyay, A. y Olgyay, V. (1957). <i>Solar Control and Shading Devices.</i> Princeton: Princeton University Press.</li>
+    <li>Olgyay, V. (1963). <i>Design with Climate: Bioclimatic Approach to Architectural Regionalism.</i> Princeton: Princeton University Press.</li>
+    <li>Spencer, J. W. (1971). Fourier series representation of the position of the sun. <i>Search</i>, 2(5), 172.</li>
+    <li>Szokolay, S. V. (2008). <i>Introduction to Architectural Science: The Basis of Sustainable Design</i> (2.ª ed.). Oxford: Architectural Press.</li>
+  </ul>
+</section>
+
+<section id="acerca">
+  <h2>5 · Créditos</h2>
+  <p>Desarrollada en la Universidad de San Buenaventura – Pasto para la docencia, la investigación y la práctica profesional en diseño bioclimático y estrategias pasivas.</p>
+  <p>Aplicación de escritorio construida con Electron; funciona sin conexión y sin dependencias externas. Tipografías Source Serif 4 y JetBrains Mono, bajo licencia SIL Open Font License 1.1.</p>
+  <p class="meta">Carta Solar <span id="v-app2">—</span> · uso interno, todos los derechos reservados.</p>
+</section>
+</main>
+<footer>
+  <span class="meta">Carta Solar · Universidad de San Buenaventura – Pasto</span>
+  <button id="cerrar" autofocus>Cerrar</button>
+</footer>
+<script>
+(function(){
+  // Las versiones llegan por la cadena de consulta desde src/main.js: la
+  // ventana corre con sandbox y sin preload, así que no puede leer process.
+  var q = new URLSearchParams(location.search);
+  function pon(id, v){ var e = document.getElementById(id); if (e && v) e.textContent = v; }
+  pon('v-app', q.get('v')); pon('v-app2', q.get('v'));
+  pon('v-el', q.get('electron')); pon('v-ch', q.get('chrome'));
+
+  var main = document.getElementById('main');
+  var enlaces = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+  function marca(){
+    var y = main.scrollTop + 40, actual = enlaces[0];
+    enlaces.forEach(function(a){
+      var s = document.querySelector(a.getAttribute('href'));
+      if (s && s.offsetTop - main.offsetTop <= y) actual = a;
+    });
+    if (main.scrollTop + main.clientHeight >= main.scrollHeight - 4) actual = enlaces[enlaces.length - 1];
+    enlaces.forEach(function(a){ a.classList.toggle('on', a === actual); });
+  }
+  main.addEventListener('scroll', marca);
+  enlaces.forEach(function(a){
+    a.addEventListener('click', function(ev){
+      ev.preventDefault();
+      var s = document.querySelector(a.getAttribute('href'));
+      if (s) main.scrollTo({ top: s.offsetTop - main.offsetTop - 20 });
+    });
+  });
+  // Abrir directamente en la sección pedida (#alcance, #acerca…)
+  if (location.hash) {
+    var s0 = document.querySelector(location.hash);
+    if (s0) { main.style.scrollBehavior = 'auto'; main.scrollTop = s0.offsetTop - main.offsetTop - 20; main.style.scrollBehavior = ''; }
+  }
+  marca();
+  document.getElementById('cerrar').addEventListener('click', function(){ window.close(); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') window.close(); });
+})();
+</script>
+</body>
+</html>
