@@ -51,6 +51,7 @@ jobs:
             'Deslizador + campo numerico' = 'function enlazarPar'
             'Repintado coalescido'        = 'function redibujaThrottled'
             'Sello de version CS 2.0.0'   = "const APP_VER='CS 2.0.0'"
+            'Ventana Acerca de'           = 'window.abrirAcerca = function'
           }
           $faltan = @()
           foreach ($m in $marcadores.GetEnumerator()) {
@@ -110,25 +111,20 @@ jobs:
           }
           "- Icono: $n resoluciones ($($tam -join ', '))" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
-      # La ventana "Acerca de" (alcance y metodologia) es un HTML aparte que
-      # carga src/main.js. Si falta, el menu muestra un error en vez de la
-      # ventana; aqui se detecta antes de publicar.
-      - name: Verificar la ventana Acerca de
+      # El "Acerca de" (alcance, metodologia, referencias) va DENTRO de
+      # carta_solar.html para que funcione tambien en el navegador. El menu de
+      # Electron solo llama a abrirAcerca(seccion); si falta una seccion, el
+      # menu no hace nada visible. Aqui se detecta antes de publicar.
+      - name: Verificar el Acerca de integrado
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
-          if (-not (Test-Path 'src/acerca.html')) {
-            throw 'Falta src/acerca.html (ejecutar: python build/generar_acerca.py).'
+          $a = Get-Content 'carta_solar.html' -Raw -Encoding UTF8
+          foreach ($id in 'alcance','metodologia','limitaciones','referencias','creditos') {
+            if ($a -notmatch ('id="ac-' + $id + '"')) { throw "carta_solar.html no tiene la seccion #ac-$id del Acerca de." }
           }
-          $a = Get-Content 'src/acerca.html' -Raw -Encoding UTF8
-          foreach ($id in 'alcance','metodologia','limitaciones','referencias','acerca') {
-            if ($a -notmatch ('id="' + $id + '"')) { throw "src/acerca.html no tiene la seccion #$id." }
-          }
-          if ($a -match '@@') { throw 'src/acerca.html tiene marcadores de plantilla sin sustituir.' }
-          $ext = ([regex]::Matches($a, '(?:src|href)="https?://')).Count
-          if ($ext -gt 0) { throw "src/acerca.html tiene $ext referencia(s) externa(s); debe ser cero-CDN." }
-          if (-not (Test-Path 'build/icon.png')) { throw 'Falta build/icon.png' }
-          "- Acerca de: $((Get-Item 'src/acerca.html').Length) bytes" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+          if ($a -notmatch 'id="acIcono" href="data:image/png;base64,') { throw 'Falta el icono embebido (favicon) en carta_solar.html.' }
+          "- Acerca de: integrado en el HTML (5 secciones)" | Out-File $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -159,11 +155,13 @@ jobs:
       - name: Comprobar sintaxis del proceso principal
         run: node --check src/main.js
 
-      # npm run dist lleva --publish never. electron-builder publica por su
-      # cuenta cuando hay GH_TOKEN y el build viene de una etiqueta, y eso
-      # choca con action-gh-release (assets duplicados o error 422).
-      - name: Build portable + installer (x64)
-        run: npm run dist
+      # npm run dist:todo genera en una sola pasada el portable y el instalador
+      # NSIS (los dos targets de build.win en package.json). En local:
+      #   npm run dist             -> solo portable
+      #   npm run dist:instalador  -> solo instalador
+      # Todos llevan --publish never.
+      - name: Build portable + instalador (x64)
+        run: npm run dist:todo
 
       # Comprobacion cruzada: la version del HTML y la de package.json deben
       # coincidir. Si no, el ejecutable se llamaria 2.1.0 llevando dentro el
@@ -189,8 +187,16 @@ jobs:
       - name: Listar el resultado
         shell: pwsh
         run: |
-          $exes = Get-ChildItem 'dist' -Filter '*.exe' -Recurse
-          if (-not $exes) { throw 'electron-builder no produjo ningun .exe en dist/.' }
+          # Sin -Recurse: dist/win-unpacked/CartaSolar.exe no es un entregable.
+          # Solo los dos entregables: electron-builder puede dejar tambien en
+          # dist/ un __uninstaller-*.exe interno que no debe publicarse.
+          $exes = Get-ChildItem 'dist' -Filter '*.exe' |
+                  Where-Object { $_.Name -like '*-portable.exe' -or $_.Name -like '*-setup.exe' }
+          foreach ($patron in '*-portable.exe','*-setup.exe') {
+            if (-not ($exes | Where-Object Name -like $patron)) {
+              throw "electron-builder no produjo $patron en dist/."
+            }
+          }
           foreach ($e in $exes) {
             $mb  = [math]::Round($e.Length / 1MB, 1)
             $sha = (Get-FileHash $e.FullName -Algorithm SHA256).Hash
@@ -202,7 +208,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: CartaSolar-windows-x64
-          path: dist/*.exe
+          path: |
+            dist/*-portable.exe
+            dist/*-setup.exe
           if-no-files-found: error
           retention-days: 30
 
@@ -210,5 +218,7 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v3
         with:
-          files: dist/*.exe
+          files: |
+            dist/*-portable.exe
+            dist/*-setup.exe
           generate_release_notes: true
