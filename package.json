@@ -8,7 +8,9 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder --win --x64 --publish never"
+    "dist": "electron-builder --win portable --x64 --publish never",
+    "dist:instalador": "electron-builder --win nsis --x64 --publish never",
+    "dist:todo": "electron-builder --win --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^44.0.0",
