@@ -3,7 +3,9 @@
 redondeadas a partir de build/icon-fuente.png. Requiere Pillow y NumPy.
 
     python build/generar_icono.py          (desde la raíz del repositorio)
-    python build/generar_acerca.py         (luego, para refrescar el icono del "Acerca de")
+
+Además actualiza el icono embebido en carta_solar.html (favicon, que también
+usa la ventana "Acerca de"), para que el HTML siga siendo autocontenido.
 
 El fuente es una loseta crema sobre fondo transparente. Se recorta la loseta
 unos píxeles hacia dentro (para eliminar su borde original), se aplana sobre
@@ -12,7 +14,7 @@ del lado) remuestreada a 4x, de modo que el borde sale suavizado en todos los
 tamaños. Cada tamaño se reduce desde el maestro de 1024 px y se enmascara a su
 propia resolución: así el contorno queda nítido también a 16 px.
 """
-import io, pathlib, struct
+import base64, io, pathlib, re, struct
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -53,3 +55,14 @@ for n, d in zip(TAMANOS_ICO, pngs):
     off += len(d)
 (B / 'icon.ico').write_bytes(cab + ent + b''.join(pngs))
 print('build/icon.png (512) y build/icon.ico', TAMANOS_ICO)
+
+# Icono embebido en el HTML: la entrada de 256 px del ICO
+html_p = RAIZ / 'carta_solar.html'
+html = html_p.read_text(encoding='utf-8')
+b64 = base64.b64encode(pngs[TAMANOS_ICO.index(256)]).decode('ascii')
+nuevo, n = re.subn(r'(id="acIcono" href="data:image/png;base64,)[A-Za-z0-9+/=]+(")',
+                   lambda m: m.group(1) + b64 + m.group(2), html)
+if n != 1:
+    raise SystemExit('carta_solar.html: no se encontró el favicon id="acIcono"')
+html_p.write_text(nuevo, encoding='utf-8', newline='\n')
+print('carta_solar.html: icono embebido actualizado')
