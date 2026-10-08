@@ -10,9 +10,6 @@ const path = require('path');
 const fs = require('fs');
 
 const APP_HTML = path.join(__dirname, '..', 'carta_solar.html');
-// Ventana "Acerca de": alcance y metodologia. Se genera con
-// build/generar_acerca.py a partir de build/acerca.tpl.html.
-const ACERCA_HTML = path.join(__dirname, 'acerca.html');
 
 // En Windows el .exe ya lleva el icono incrustado por electron-builder, pero
 // en desarrollo (npm start) y en Linux hace falta pasarlo a la ventana. Se
@@ -108,51 +105,19 @@ function configurarDescargas(win) {
   });
 }
 
-// ── Ventana "Acerca de" ─────────────────────────────────────────────
-// Ventana hija modal con el alcance, la metodologia, las limitaciones y las
-// referencias. Un dialogo nativo (showMessageBox) no admite formulas, enlaces
-// internos ni desplazamiento, y el texto de metodologia no cabe en el.
-// Una sola instancia: si ya esta abierta, solo se lleva a la seccion pedida.
-let acercaWin = null;
+// ── "Acerca de" ───────────────────────────────────────────────────
+// El alcance, la metodologia y las referencias viven dentro de
+// carta_solar.html (funcion abrirAcerca), para que el mismo archivo sirva
+// en cualquier navegador sin conexion. El menu solo le pide a la pagina que
+// abra la seccion indicada.
 function abrirAcerca(seccion) {
-  const hash = seccion || 'alcance';
-  if (acercaWin && !acercaWin.isDestroyed()) {
-    acercaWin.webContents.executeJavaScript(
-      `(function(){var s=document.getElementById(${JSON.stringify(hash)});` +
-      `var m=document.getElementById('main');if(s&&m)m.scrollTo({top:s.offsetTop-m.offsetTop-20});})()`
-    ).catch(() => {});
-    acercaWin.focus();
-    return;
-  }
-  if (!fs.existsSync(ACERCA_HTML)) {
-    dialog.showErrorBox('Carta Solar', 'No se encontró src/acerca.html dentro de la aplicación.');
-    return;
-  }
-  const padre = BrowserWindow.getAllWindows().find(w => w !== acercaWin) || null;
-  acercaWin = new BrowserWindow({
-    parent: padre || undefined, modal: !!padre,
-    width: 820, height: 760, minWidth: 600, minHeight: 480,
-    title: 'Acerca de Carta Solar', icon: iconoApp(),
-    backgroundColor: '#f0ebe0', show: false,
-    minimizable: false, maximizable: true, autoHideMenuBar: true,
-    webPreferences: {
-      contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false
-    }
-  });
-  acercaWin.setMenu(null);
-  acercaWin.once('ready-to-show', () => acercaWin.show());
-  acercaWin.on('closed', () => { acercaWin = null; });
-  acercaWin.webContents.setWindowOpenHandler(({ url }) => {
-    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
-    return { action: 'deny' };
-  });
-  acercaWin.webContents.on('will-navigate', (e, url) => {
-    if (!url.startsWith('file://')) { e.preventDefault(); if (/^https?:\/\//i.test(url)) shell.openExternal(url); }
-  });
-  acercaWin.loadFile(ACERCA_HTML, {
-    hash,
-    query: { v: APP_VERSION, electron: process.versions.electron, chrome: process.versions.chrome }
-  });
+  const win = BrowserWindow.getFocusedWindow() || BrowserWindow.getAllWindows()[0];
+  if (!win || win.isDestroyed()) return;
+  if (win.isMinimized()) win.restore();
+  win.focus();
+  win.webContents.executeJavaScript(
+    `window.abrirAcerca && window.abrirAcerca(${JSON.stringify(seccion || 'alcance')})`
+  ).catch(() => {});
 }
 
 function buildMenu() {
@@ -173,7 +138,7 @@ function buildMenu() {
       { label: 'Limitaciones y precisión', click: () => abrirAcerca('limitaciones') },
       { label: 'Referencias', click: () => abrirAcerca('referencias') },
       { type: 'separator' },
-      { label: 'Acerca de Carta Solar', click: () => abrirAcerca('acerca') }
+      { label: 'Acerca de Carta Solar', click: () => abrirAcerca('creditos') }
     ]}
   ]));
 }
